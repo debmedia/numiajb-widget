@@ -588,10 +588,11 @@ export const styles = `
     overflow-x: auto;  
     overflow-y: hidden; 
     min-height: 75px;
-    margin: 1rem;
+    padding: 0.5rem;
     scrollbar-width: thin;
-    margin-bottom: 0rem;
+    padding-bottom: 0rem;
     position: relative;
+    background-color: var(--base-white);
   }
   .cl-files-container > .cl-error-message {
     width: auto;
