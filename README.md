@@ -19,7 +19,7 @@ Journey Builder es un producto de NUMIA que permite diseñar, configurar y ejecu
 Usá el Widget de Journey Builder directamente desde el CDN incluyendo la siguiente etiqueta <script> en tu archivo HTML:
 
 ```html
-<script src="[https://cdn.jsdelivr.net/gh/debmedia/numiajb-widget@1.0.0/dist/build/static/js/bundle.min.js](https://cdn.jsdelivr.net/gh/debmedia/numiajb-widget@1.0.0/dist/build/static/js/bundle.min.js)"></script>
+<script src="https://cdn.jsdelivr.net/gh/debmedia/numiajb-widget@1.0.0/dist/build/static/js/bundle.min.js"></script>
 ```
 
 ## Usage
