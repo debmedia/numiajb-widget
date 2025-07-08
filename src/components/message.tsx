@@ -83,6 +83,11 @@ export default function ChatMessage({
           <Markdown 
             className={"markdown-body prose flex flex-col word-break-break-word"}
             rehypePlugins={[rehypeMathjax]}
+            components={{
+              p: ({ children }) => (
+                <p style={{ whiteSpace: 'pre-wrap' }}>{children}</p>
+              ),
+            }}
           >
             {message}
           </Markdown>

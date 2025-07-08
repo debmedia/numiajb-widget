@@ -42,6 +42,8 @@ export type MainChatWidgetProps = {
   header_subtitle_style?: React.CSSProperties;
   show_chat_status: boolean;
   attached_file_style?: React.CSSProperties;
+  error_send_text_file_style?: React.CSSProperties;
+  retry_send_file_btn_style?: React.CSSProperties;
 }
 
 export type ChatWindowProps = {
@@ -90,6 +92,8 @@ export type ChatWindowProps = {
   header_subtitle_style?: React.CSSProperties;
   show_chat_status: boolean;
   attached_file_style?: React.CSSProperties;
+  error_send_text_file_style?: React.CSSProperties;
+  retry_send_file_btn_style?: React.CSSProperties;
 }
 
 export type ChatMessageType = {
@@ -120,6 +124,8 @@ export type FilePreviewProps = {
   retrySend:(file: File, fileId: string) => void;
   skeleton_file_style?: React.CSSProperties;
   attach_file_style?: React.CSSProperties;
+  error_send_text_file_style?: React.CSSProperties;
+  retry_send_file_btn_style?: React.CSSProperties;
 };
 
 export type ChatMessagePlaceholderType = {

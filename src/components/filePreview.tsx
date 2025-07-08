@@ -18,6 +18,8 @@ export default function FilePreview({
     retrySend,
     skeleton_file_style,
     attach_file_style,
+    error_send_text_file_style,
+    retry_send_file_btn_style,
     }: FilePreviewProps) {
     const fileType = file.type?.toLowerCase();
     const isImage = supImgFiles.some((type) => fileType.includes(type));
@@ -30,8 +32,9 @@ export default function FilePreview({
                 >
                     {error ? 
                         <>
-                            <p>Error al enviar</p>
+                            <p style={error_send_text_file_style}>Error al enviar</p>
                             <button    
+                                style={retry_send_file_btn_style}
                                 className="retry-send-file-btn" 
                                 onClick={() => retrySend(file, id)}
                             >
@@ -39,7 +42,7 @@ export default function FilePreview({
                             </button>
 
                             <DeleteFile
-                                remove_file_btn_style={remove_file_btn_style}
+                                style={remove_file_btn_style}
                                 onClick={() => onDelete(id)}
                             />
                             <button 
@@ -85,7 +88,7 @@ export default function FilePreview({
                         />
                     )}
                     <DeleteFile
-                        remove_file_btn_style={remove_file_btn_style}
+                        style={remove_file_btn_style}
                         onClick={() => onDelete(id)}
                     />
                 </>

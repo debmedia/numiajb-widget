@@ -54,7 +54,9 @@ export default function ChatWindow({
   header_chat_style,
   header_subtitle_style,
   show_chat_status,
-  attached_file_style
+  attached_file_style,
+  error_send_text_file_style,
+  retry_send_file_btn_style,
 }: ChatWindowProps) {
   const [value, setValue] = useState<string>("");
   const ref = useRef<HTMLDivElement>(null);
@@ -331,6 +333,8 @@ export default function ChatWindow({
                   retrySend={handleSaveFile}
                   attach_img_style={attach_img_style}
                   attach_file_style={attach_file_style}
+                  error_send_text_file_style={ error_send_text_file_style}
+                  retry_send_file_btn_style={retry_send_file_btn_style}
                 />
               ))}
             </div>

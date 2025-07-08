@@ -45,6 +45,8 @@ customElements.define('journey-builder-chat', r2wc(ChatWidget, {
         header_chat_style: "json",
         header_subtitle_style: "json",
         show_chat_status: "boolean",
-        attached_file_style: "json"
+        attached_file_style: "json",
+        error_send_text_file_style: "json",
+        retry_send_file_btn_style: "json",
     }
 }));
