@@ -22,7 +22,7 @@ Usá el Widget de Journey Builder directamente desde el CDN incluyendo la siguie
 <script src="https://cdn.jsdelivr.net/gh/debmedia/numiajb-widget@1.0.0/dist/build/static/js/bundle.min.js"></script>
 ```
 
-## Usage
+## Uso
 ```html
  <journey-builder-chat
     window_title="Journey Builder Chat"
