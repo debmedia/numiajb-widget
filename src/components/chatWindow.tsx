@@ -185,7 +185,7 @@ export default function ChatWindow({
             response.data.detail
           ) {
             updateLastMessage({
-              message: response.data.detail,
+              message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status})`,
               isSend: false,
               error: true,
             });
