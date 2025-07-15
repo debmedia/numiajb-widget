@@ -775,6 +775,7 @@ export const styles = `
     background-color: var(--muted-grey);
     text-align: left;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    color: rgb(31 41 55 / var(--tw-text-opacity));
   }
   .cl-error_message {
     border-radius: 5px 16px 16px 16px;
