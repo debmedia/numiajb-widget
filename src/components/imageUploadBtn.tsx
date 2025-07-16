@@ -5,11 +5,15 @@ export default function ImageUploadBtn (
     { 
         handleImagenChange,
         attach_img_button_style,
-        uploadError
+        uploadError,
+        allow_to_send_imgs,
+        disabled
     } : {
         handleImagenChange: (event: React.ChangeEvent<HTMLInputElement>) => void,
         attach_img_button_style? : React.CSSProperties;
         uploadError: boolean | string;
+        allow_to_send_imgs: boolean;
+        disabled: boolean
     }
 )  {
     const fileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -25,6 +29,7 @@ export default function ImageUploadBtn (
     }
     
     return (
+        allow_to_send_imgs && 
         <div>
             <input
                 type="file"
@@ -38,11 +43,12 @@ export default function ImageUploadBtn (
                     className="cl-send-image-btn"
                     onClick={handleButtonClick}
                     style={attach_img_button_style}
+                    disabled={disabled}
                 >
                     <Image />
                 </button>
-                <span className={ "tooltip-text" + (uploadError ? " error-visible tooltip-error" : "") }>
-                    {uploadError ? uploadError :"Adjuntar imagen (png, jpg, jpeg)"}
+                <span className={ "tooltip-text" + ((uploadError ) ? " error-visible tooltip-error" : "") }>
+                    {uploadError ? uploadError : disabled ?  "Servicio de imágenes no disponible" : "Adjuntar imagen (png, jpg, jpeg)"}
                 </span>
             </div>
         </div>

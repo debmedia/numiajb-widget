@@ -57,6 +57,7 @@ export default function ChatWindow({
   attached_file_style,
   error_send_text_file_style,
   retry_send_file_btn_style,
+  allow_to_send_imgs
 }: ChatWindowProps) {
   const [value, setValue] = useState<string>("");
   const ref = useRef<HTMLDivElement>(null);
@@ -65,7 +66,7 @@ export default function ChatWindow({
   const inputRef = useRef<HTMLInputElement>(null); 
   const [sendingMessage, setSendingMessage] = useState(false);
   const [ files, setImages ] = useState<Array<file>>([]);
-  const [ chatInputIdD, setChatInputID ] = useState<string>("");
+  const [ chatInputID, setchatInputId ] = useState<string>("");
   const [ flowName, setFlowName ] = useState<string>("")
   const [modalImg, setModalImg] = useState<File>();
   const [ uploadError, setUploadError ] = useState<string | boolean>(false);
@@ -77,7 +78,7 @@ export default function ChatWindow({
       const { data } = response;
       setFlowName(data.name);
       const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
-      setChatInputID(chatInput && chatInput[0].id);
+      setchatInputId(chatInput && chatInput[0].id);
     })
     // eslint-disable-next-line
   }, [])
@@ -113,15 +114,14 @@ export default function ChatWindow({
   function handleClick() {
     if (value && value.trim() !== "") {
       if(files && files.length > 0) {
-        addMessage({ message: value, isSend: true, files: files });
+        addMessage({ message: value, isSend: true, files: files.filter((file) => !file.error && !file.loading) });
         setImages([]);
-
       } else {
         addMessage({ message: value, isSend: true });
       }
       setSendingMessage(true);
       setValue("");
-      sendMessage(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputIdD, files)
+      sendMessage(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
         .then((res) => {
           if (
             res.data &&
@@ -172,24 +172,11 @@ export default function ChatWindow({
         })
         .catch((err) => {
           const response = err.response;
-          if (err.code === "ERR_NETWORK") {
-            updateLastMessage({
-              message: "Network error",
+          updateLastMessage({
+              message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status || ""})`,
               isSend: false,
               error: true,
             });
-          } else if (
-            response &&
-            response.status === 500 &&
-            response.data &&
-            response.data.detail
-          ) {
-            updateLastMessage({
-              message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status})`,
-              isSend: false,
-              error: true,
-            });
-          }
           console.error(err);
           setSendingMessage(false);
         })
@@ -340,16 +327,19 @@ export default function ChatWindow({
             </div>
           }
           <div style={input_container_style} className="cl-input_container">
-            <ImageUploadBtn
+             <ImageUploadBtn
               handleImagenChange={handleFileChange}
               attach_img_button_style={attach_img_button_style}
               uploadError={uploadError}
+              allow_to_send_imgs={allow_to_send_imgs}
+              disabled={chatInputID.trim().length === 0}
             />
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleClick();
+                const pendingFiles = files.filter(file => file.loading)
+                if (e.key === "Enter" && pendingFiles.length == 0) handleClick();
               }}
               type="text"
               disabled={sendingMessage}
@@ -360,7 +350,7 @@ export default function ChatWindow({
             />
             <button
               style={send_button_style}
-              disabled={(sendingMessage) || (value.length === 0)}
+              disabled={(sendingMessage) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
               onClick={handleClick}
               className="cl-button-send-msg"
             >

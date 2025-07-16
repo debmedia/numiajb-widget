@@ -528,6 +528,10 @@ export const styles = `
   .cl-send-image-btn:hover > svg {
     stroke: var(--primary-dark);
   }
+  .cl-send-image-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   .cl-header-subtitle {
     display: flex;
     align-items: center;

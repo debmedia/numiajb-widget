@@ -44,6 +44,7 @@ export type MainChatWidgetProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
+  allow_to_send_imgs: boolean
 }
 
 export type ChatWindowProps = {
@@ -94,6 +95,7 @@ export type ChatWindowProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
+  allow_to_send_imgs: boolean
 }
 
 export type ChatMessageType = {

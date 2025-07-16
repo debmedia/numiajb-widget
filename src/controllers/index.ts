@@ -13,11 +13,12 @@ export async function handleFlowInfo(baseUrl: string, flowId: string, api_key?:s
 export async function sendMessage(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.MutableRefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>) {
     let data:any;
     data = {input_type,input_value:message,output_type}
-    if(files && files.length > 0 && chatInputID) {
+    const allFiles = files?.filter(file => !file.error);
+    if(allFiles && allFiles.length > 0 && chatInputID) {
         data["tweaks"] =  {
                 ...(tweaks || {}),
                 [chatInputID] : {
-                files: files?.map(img => img.file_path),
+                files: allFiles?.map(img => img.file_path),
                 session_id: sessionId.current
             }
         }
