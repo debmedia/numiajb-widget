@@ -584,6 +584,7 @@ export const styles = `
     border-color: var(--muted-grey);
     --tw-bg-opacity: 1;
     background-color: var(--base-white);
+    position:relative
   }
   .cl-files-container {
     display:flex;
@@ -935,23 +936,20 @@ export const styles = `
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 0.75rem;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     position: absolute;
-    z-index: 1;
-    bottom: 125%; 
-    left: 80px;
-    transform: translateX(-50%);
+    z-index: 9999;
+    bottom: 125%;
+    left: 0px;
     white-space: nowrap;
     opacity: 0;
-    transition: opacity 0.2s;
-
+    transition: opacity 0.2s ease-in-out;
   }
   .tooltip-text.error-visible {
     visibility: visible;
     opacity: 1;
     background-color: var(--error-background);
     color: var(--error);
-    left: 125px;
   }
   .tooltip-wrapper:hover .tooltip-text {
     visibility: visible;
