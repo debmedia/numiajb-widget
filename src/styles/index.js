@@ -918,6 +918,12 @@ export const styles = `
     align-self: start;
     height: min-content;
   }
+  .cl-error-message > strong {
+    cursor: pointer;
+  }
+  .loading {
+    cursor: default;
+  }
   .animate-spin {
     animation: spin 1s linear infinite;
     width: 50%;

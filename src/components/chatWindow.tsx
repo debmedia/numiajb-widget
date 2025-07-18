@@ -70,18 +70,30 @@ export default function ChatWindow({
   const [ flowName, setFlowName ] = useState<string>("")
   const [modalImg, setModalImg] = useState<File>();
   const [ uploadError, setUploadError ] = useState<string | boolean>(false);
-
+  const [ errorConnectionToFlow, setErrorConnectionToFlow ] = useState<boolean>(false);
+  const [ loadingConnection, setLoadingConnection] = useState(false);
   // Fetch initial flow info 
   useEffect(() => {
-    handleFlowInfo(hostUrl, flowId, api_key)
-    .then((response) => {
-      const { data } = response;
-      setFlowName(data.name);
-      const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
-      setchatInputId(chatInput && chatInput[0].id);
-    })
+    restarFlowConnection();
     // eslint-disable-next-line
   }, [])
+
+  const restarFlowConnection = () => {
+    if (loadingConnection) return;
+    setLoadingConnection(true);
+    handleFlowInfo(hostUrl, flowId, api_key)
+      .then((response) => {
+        const { data } = response;
+        setFlowName(data.name);
+        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
+        setchatInputId(chatInput && chatInput[0].id);
+        setErrorConnectionToFlow(false);
+      }).catch((err) => {
+        setErrorConnectionToFlow(true);
+      }).finally(() => {
+        setLoadingConnection(false);
+      })
+  }
 
   //Dynamically position chat window based on the trigger element
   useEffect(() => {
@@ -284,6 +296,12 @@ export default function ChatWindow({
             </div>
           </div>
           <div ref={containerRef} className="cl-messages_container">
+            {
+              errorConnectionToFlow &&
+              <div style={error_message_style} className={"cl-message cl-error_message"}>
+                Error al intentar establecer conexión con el flujo. <strong className={loadingConnection ? "loading" : "" } role="button" onClick={restarFlowConnection}>{loadingConnection ? " Reintentando..." : "Reintentar"}</strong>
+              </div>
+            }
             {messages.map((message, index) => (
               <ChatMessage
                 key={index}
@@ -332,7 +350,7 @@ export default function ChatWindow({
               attach_img_button_style={attach_img_button_style}
               uploadError={uploadError}
               allow_to_send_imgs={allow_to_send_imgs}
-              disabled={chatInputID.trim().length === 0}
+              disabled={errorConnectionToFlow}
             />
             <input
               value={value}
@@ -350,7 +368,7 @@ export default function ChatWindow({
             />
             <button
               style={send_button_style}
-              disabled={(sendingMessage) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
+              disabled={errorConnectionToFlow || (sendingMessage) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
               onClick={handleClick}
               className="cl-button-send-msg"
             >
