@@ -41,7 +41,7 @@ export default function ChatMessage({
           }}
         >
           
-          <div style={user_message_style} className="cl-message cl-user_message">
+          <div style={user_message_style} className="cl-message cl-user_message ">
             {message}
             {files && files.length > 0 && 
               <div style={attached_img_grid_style} className={`chat-files-grid ${getGridClass(files.length)}`}>

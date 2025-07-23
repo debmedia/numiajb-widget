@@ -277,9 +277,9 @@ export default function ChatWindow({
           ref={ref}
           className="cl-window"
         >
-          <div style={header_chat_style} className="cl-header">
+          <div style={header_chat_style} className="cl-header font-patched-lg">
             {window_title || flowName}
-            <div style={header_subtitle_style} className="cl-header-subtitle">
+            <div style={header_subtitle_style} className="cl-header-subtitle font-patched-md">
               {show_chat_status && (
                 online ? (
                   <>

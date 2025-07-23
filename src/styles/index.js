@@ -118,6 +118,15 @@ export const styles = `
     position: relative;
     vertical-align: baseline;
   }
+  @-moz-document url-prefix() {
+    .font-patched-md {
+      font-size: 0.7rem !important;
+      line-height: 1 !important;
+    }
+    .font-patched-lg {
+      font-size: 1rem !important;
+    }
+  }
 
   sub {
     bottom: -0.25em;
