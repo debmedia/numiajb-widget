@@ -65,7 +65,6 @@ export function getChatPosition(
 
 	const { width, height } = triggerPosition;
 
-	console.log(Cheight, Cwidth);
 	const w = parseDimensionToPx(Cwidth, "width");
 	const h = parseDimensionToPx(Cheight, "height");
 	const distance = 5; // Adjust this value to set the desired distance from the trigger
