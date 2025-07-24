@@ -69,7 +69,7 @@ export default function ChatWidget({
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <>
       <style dangerouslySetInnerHTML={{ __html: styles + markdownBody }}></style>
       <ChatTrigger
         triggerRef={triggerRef}
@@ -125,6 +125,6 @@ export default function ChatWidget({
         attached_file_style={attached_file_style}
         allow_to_send_imgs={allow_to_send_imgs}
       />
-    </div>
+    </>
   );
 }

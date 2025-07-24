@@ -118,10 +118,11 @@ export const styles = `
     position: relative;
     vertical-align: baseline;
   }
+    
   @-moz-document url-prefix() {
     .font-patched-md {
-      font-size: 0.7rem !important;
-      line-height: 1 !important;
+      font-size: 0.9rem !important;
+      line-height: 1rem !important;
     }
     .font-patched-lg {
       font-size: 1rem !important;
@@ -545,7 +546,7 @@ export const styles = `
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     line-height: 1.25rem;
     font-weight: 300;
     color: rgb(107 114 128);
@@ -571,7 +572,7 @@ export const styles = `
   .cl-messages_container {
     z-index: 0;
     display: flex;
-    height: 80%;
+    height: inherit;
     width: 100%;
     flex-direction: column;
     overflow-y: auto;
@@ -769,7 +770,7 @@ export const styles = `
     transition: all 0.3s ease;
     line-height: 1.4;
     margin: 4px 0;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
   .cl-user_message {
     align-self: flex-end;
@@ -976,7 +977,7 @@ export const markdownBody = `
   .markdown-body {
     --base-size-4: 0.25rem;
     --base-size-8: 0.5rem;
-    --base-size-16: 1rem;
+    --base-size-16: 0.9rem;
     --base-text-weight-normal: 400;
     --base-text-weight-medium: 500;
     --base-text-weight-semibold: 600;
@@ -984,7 +985,8 @@ export const markdownBody = `
   }
 
   .markdown-body, .markdown-body * {
-    font-size: 1rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1rem;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -1238,7 +1240,7 @@ export const markdownBody = `
     margin: 0;
     overflow: visible;
     font-family: inherit;
-    font-size: inherit;
+    font-size: 0.9rem;
     line-height: inherit;
   }
 
@@ -1251,7 +1253,6 @@ export const markdownBody = `
 
   .markdown-body [type=checkbox],
   .markdown-body [type=radio] {
-    box-sizing: border-box;
     padding: 0;
   }
 
@@ -1410,7 +1411,7 @@ export const markdownBody = `
   .markdown-body p {
     margin-top: 0;
     margin-bottom: 10px;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .markdown-body blockquote {
@@ -1447,14 +1448,14 @@ export const markdownBody = `
   .markdown-body code,
   .markdown-body samp {
     font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .markdown-body pre {
     margin-top: 0;
     margin-bottom: 0;
     font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
-    font-size: 1rem;
+    font-size: 0.9rem;
     word-wrap: normal;
   }
 
@@ -1864,7 +1865,7 @@ export const markdownBody = `
   .markdown-body .csv-data th {
     padding: 5px;
     overflow: hidden;
-    font-size: 1rem;
+    font-size: 0.9rem;
     line-height: 1;
     text-align: left;
     white-space: nowrap;
@@ -1895,7 +1896,7 @@ export const markdownBody = `
   }
 
   .markdown-body .footnotes {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--fgColor-muted);
     border-top: 1px solid var(--borderColor-default);
   }

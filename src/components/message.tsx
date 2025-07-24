@@ -41,7 +41,7 @@ export default function ChatMessage({
           }}
         >
           
-          <div style={user_message_style} className="cl-message cl-user_message ">
+          <div style={user_message_style} className="cl-message cl-user_message font-patched-md">
             {message}
             {files && files.length > 0 && 
               <div style={attached_img_grid_style} className={`chat-files-grid ${getGridClass(files.length)}`}>
@@ -72,7 +72,7 @@ export default function ChatMessage({
       ) : error ? (
         <div style={error_message_style} className={"cl-message cl-error_message"}>
           <Markdown 
-            className={"markdown-body prose flex flex-col word-break-break-word"}
+            className={"markdown-body prose flex flex-col word-break-break-word font-patched-md"}
             rehypePlugins={[rehypeMathjax]}
           >
             {message}
@@ -81,7 +81,7 @@ export default function ChatMessage({
       ) : (
         <div style={bot_message_style} className={"cl-message cl-bot_message"}>
           <Markdown 
-            className={"markdown-body prose flex flex-col word-break-break-word"}
+            className={"markdown-body prose flex flex-col word-break-break-word font-patched-md"}
             rehypePlugins={[rehypeMathjax]}
             components={{
               p: ({ children }) => (

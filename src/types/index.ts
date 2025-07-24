@@ -13,8 +13,8 @@ export type MainChatWidgetProps = {
   online?: boolean;
   online_message?: string;
   offline_message?: string;
-  height?: number;
-  width?: number;
+  height?: string;
+  width?: string;
   window_title?: string;
   error_message_style?: React.CSSProperties;
   send_button_style?: React.CSSProperties;
@@ -75,8 +75,8 @@ export type ChatWindowProps = {
   addMessage: Function;
   position?: string;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
-  width?: number;
-  height?: number;
+  width?: string;
+  height?: string;
   sessionId: React.MutableRefObject<string>;
   additional_headers?: { [key: string]: string };
   attach_img_button_style? :React.CSSProperties;

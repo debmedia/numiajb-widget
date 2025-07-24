@@ -1,5 +1,5 @@
 import { Send } from "lucide-react";
-import { ALLOWED_IMAGE_INPUT_EXTENSIONS, extractMessageFromOutput, getAnimationOrigin, getChatPosition } from "../utils";
+import { ALLOWED_IMAGE_INPUT_EXTENSIONS, extractMessageFromOutput, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
 import React, { useEffect, useRef, useState } from "react";
 import {  ChatWindowProps, file } from "../types";
 import ChatMessage from "./message";
@@ -36,8 +36,8 @@ export default function ChatWindow({
   addMessage,
   position,
   triggerRef,
-  width = 450,
-  height = 650,
+  width = "450",
+  height = "650",
   tweaks,
   sessionId,
   additional_headers,
@@ -273,7 +273,7 @@ export default function ChatWindow({
         style={{ ...windowPosition, zIndex: 9999 }}
       >
         <div
-          style={{  ...chat_window_style, width: width, height: height }}
+          style={{  ...chat_window_style, width: parseDimensions(width), height: parseDimensions(height) }}
           ref={ref}
           className="cl-window"
         >
@@ -357,14 +357,14 @@ export default function ChatWindow({
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => {
                 const pendingFiles = files.filter(file => file.loading)
-                if (e.key === "Enter" && pendingFiles.length == 0) handleClick();
+                if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow) handleClick();
               }}
               type="text"
               disabled={sendingMessage}
               placeholder={sendingMessage ? (placeholder_sending || "Procesando...") : (placeholder || "Envía un mensaje...")}
               style={input_style}
               ref={inputRef}
-              className="cl-input-element"
+              className="cl-input-element font-patched-md"
             />
             <button
               style={send_button_style}
