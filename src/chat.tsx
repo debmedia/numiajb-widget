@@ -48,7 +48,7 @@ export default function ChatWidget({
   header_subtitle_style,
   show_chat_status = true,
   attached_file_style,
-  allow_to_send_imgs = true
+  allow_to_send_imgs = false
 }: MainChatWidgetProps ) {
 
   const [open, setOpen] = useState(start_open);
