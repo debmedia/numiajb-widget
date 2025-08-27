@@ -3,7 +3,7 @@ import { ALLOWED_IMAGE_INPUT_EXTENSIONS, extractMessageFromOutput, getAnimationO
 import React, { useEffect, useRef, useState } from "react";
 import {  ChatWindowProps, file } from "../types";
 import ChatMessage from "./message";
-import { handleFlowInfo, saveImage, sendMessage } from "../controllers";
+import { handleFlowInfo, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
@@ -72,6 +72,7 @@ export default function ChatWindow({
   const [ uploadError, setUploadError ] = useState<string | boolean>(false);
   const [ errorConnectionToFlow, setErrorConnectionToFlow ] = useState<boolean>(false);
   const [ loadingConnection, setLoadingConnection] = useState(false);
+  const [ flowInfo, setFlowInfo ] = useState<any>(null);
   // Fetch initial flow info 
   useEffect(() => {
     restarFlowConnection();
@@ -82,13 +83,14 @@ export default function ChatWindow({
     if (loadingConnection) return;
     setLoadingConnection(true);
     handleFlowInfo(hostUrl, flowId, api_key)
-      .then((response) => {
-        const { data } = response;
+      .then((data) => {
+        setFlowInfo(data);
         setFlowName(data.name);
         const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
         setchatInputId(chatInput && chatInput[0].id);
         setErrorConnectionToFlow(false);
       }).catch((err) => {
+        console.log(err);
         setErrorConnectionToFlow(true);
       }).finally(() => {
         setLoadingConnection(false);
@@ -133,50 +135,13 @@ export default function ChatWindow({
       }
       setSendingMessage(true);
       setValue("");
-      sendMessage(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
+      
+      // Choose the appropriate send function based on allow_to_send_imgs
+      const sendFunction = allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
+      
+      sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files, flowInfo)
         .then((res) => {
-          if (
-            res.data &&
-            res.data.outputs &&
-            Object.keys(res.data.outputs).length > 0 &&
-            res.data.outputs[0].outputs && res.data.outputs[0].outputs.length > 0
-          ) {
-            const flowOutputs: Array<any> = res.data.outputs[0].outputs;
-            if (output_component &&
-              flowOutputs.map(e => e.component_id).includes(output_component)) {
-              Object.values(flowOutputs.find(e => e.component_id === output_component).outputs).forEach((output: any) => {
-                addMessage({
-                  message: extractMessageFromOutput(output),
-                  isSend: false,
-                });
-              })
-            } else if (
-              flowOutputs.length === 1
-            ) {
-              Object.values(flowOutputs[0].outputs).forEach((output: any) => {
-                addMessage({
-                  message: extractMessageFromOutput(output),
-                  isSend: false,
-                });
-              })
-            } else {
-              flowOutputs
-                .sort((a, b) => {
-                  // Get the earliest timestamp from each flowOutput's outputs
-                  const aTimestamp = Math.min(...Object.values(a.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
-                  const bTimestamp = Math.min(...Object.values(b.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
-                  return aTimestamp - bTimestamp; // Sort descending (newest first)
-                })
-                .forEach((flowOutput) => {
-                  Object.values(flowOutput.outputs).forEach((output: any) => {
-                    addMessage({
-                      message: extractMessageFromOutput(output),
-                      isSend: false,
-                    });
-                  });
-                });
-            }
-          }
+          handleMessageResponse(res);
           if (res.data && res.data.session_id) {
             sessionId.current = res.data.session_id;
           }
@@ -196,6 +161,52 @@ export default function ChatWindow({
         })
     }
   }
+
+  // Reusable function to handle message response output
+  const handleMessageResponse = (res: any) => {
+    if (
+      res.data &&
+      res.data.outputs &&
+      Object.keys(res.data.outputs).length > 0 &&
+      res.data.outputs[0].outputs && res.data.outputs[0].outputs.length > 0
+    ) {
+      const flowOutputs: Array<any> = res.data.outputs[0].outputs;
+      if (output_component &&
+        flowOutputs.map(e => e.component_id).includes(output_component)) {
+        Object.values(flowOutputs.find(e => e.component_id === output_component).outputs).forEach((output: any) => {
+          addMessage({
+            message: extractMessageFromOutput(output),
+            isSend: false,
+          });
+        })
+      } else if (
+        flowOutputs.length === 1
+      ) {
+        Object.values(flowOutputs[0].outputs).forEach((output: any) => {
+          addMessage({
+            message: extractMessageFromOutput(output),
+            isSend: false,
+          });
+        })
+      } else {
+        flowOutputs
+          .sort((a, b) => {
+            // Get the earliest timestamp from each flowOutput's outputs
+            const aTimestamp = Math.min(...Object.values(a.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
+            const bTimestamp = Math.min(...Object.values(b.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
+            return aTimestamp - bTimestamp; // Sort descending (newest first)
+          })
+          .forEach((flowOutput) => {
+            Object.values(flowOutput.outputs).forEach((output: any) => {
+              addMessage({
+                message: extractMessageFromOutput(output),
+                isSend: false,
+              });
+            });
+          });
+      }
+    }
+  };
 
   // Handle file selection
   const handleFileChange = (
