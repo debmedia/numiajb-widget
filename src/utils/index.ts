@@ -1,6 +1,7 @@
 export const supImgFiles = ["png", "jpg", "jpeg", "gif", "bmp", "webp", "image"];
 export const ALLOWED_IMAGE_INPUT_EXTENSIONS = ["png", "jpg", "jpeg"];
-
+export const ALLOWED_IMAGE_MIME_TYPES = ["image/png", "image/jpg", "image/jpeg"];
+export const fileLimit =  1 * 1024 * 1024;
 export function parseDimensions(value : string) {
   const trimmed = value.trim().toLowerCase();
 

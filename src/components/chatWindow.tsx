@@ -1,5 +1,5 @@
 import { Send } from "lucide-react";
-import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
+import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, fileLimit, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import {  ChatWindowProps, file } from "../types";
 import ChatMessage from "./message";
@@ -8,7 +8,6 @@ import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
 import { ModalImg } from "./modalImg";
-import DOMPurify from 'dompurify';
 
 
 export default function ChatWindow({
@@ -241,7 +240,7 @@ export default function ChatWindow({
         }, 3000);
         return;
       }
-      const maxSize = 1 * 1024 * 1024; // 1 MB
+      const maxSize = fileLimit; // 1 MB
       if (file.size > maxSize) {
         setUploadError("Archivo demasiado grande (máx 1MB)");
         setTimeout(() => {
@@ -287,8 +286,9 @@ export default function ChatWindow({
   }
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const sanitizedValue = DOMPurify.sanitize(e.target.value);
-    setValue(sanitizedValue);
+    const safeValue = e.target.value.replace(/[<>;]/g, "");
+
+    setValue(safeValue);
   };
 
   return (
@@ -389,6 +389,7 @@ export default function ChatWindow({
                 if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow) handleClick();
               }}
               type="text"
+              maxLength={500}
               disabled={sendingMessage}
               placeholder={sendingMessage ? (placeholder_sending || "Procesando...") : (placeholder || "Envía un mensaje...")}
               style={input_style}
