@@ -8,6 +8,7 @@ import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
 import { ModalImg } from "./modalImg";
+import DOMPurify from 'dompurify';
 
 
 export default function ChatWindow({
@@ -286,9 +287,8 @@ export default function ChatWindow({
   }
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const safeValue = e.target.value.replace(/[<>;]/g, "");
-
-    setValue(safeValue);
+    const sanitizedValue = DOMPurify.sanitize(e.target.value);
+    setValue(sanitizedValue);
   };
 
   return (
