@@ -1,6 +1,6 @@
 import { Send } from "lucide-react";
-import { ALLOWED_IMAGE_INPUT_EXTENSIONS, extractMessageFromOutput, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
-import React, { useEffect, useRef, useState } from "react";
+import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import {  ChatWindowProps, file } from "../types";
 import ChatMessage from "./message";
 import { handleFlowInfo, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
@@ -8,6 +8,8 @@ import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
 import { ModalImg } from "./modalImg";
+import DOMPurify from 'dompurify';
+
 
 export default function ChatWindow({
   api_key,
@@ -226,11 +228,22 @@ export default function ChatWindow({
     try {
       const type = file.type.split("/")[0];
       const fileExtension = file.name.split(".").pop()?.toLowerCase();
+      const mimeType = file.type;
+
       if (
         !fileExtension ||
-        !ALLOWED_IMAGE_INPUT_EXTENSIONS.includes(fileExtension)
+        !ALLOWED_IMAGE_INPUT_EXTENSIONS.includes(fileExtension) ||
+        !ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)
       ) {
         setUploadError("Formato no soportado. Solo imágenes .jpg/.jpeg/.png");
+        setTimeout(() => {
+          setUploadError(false);
+        }, 3000);
+        return;
+      }
+      const maxSize = 1 * 1024 * 1024; // 1 MB
+      if (file.size > maxSize) {
+        setUploadError("Archivo demasiado grande (máx 1MB)");
         setTimeout(() => {
           setUploadError(false);
         }, 3000);
@@ -272,6 +285,11 @@ export default function ChatWindow({
   const onRemoveSelectedFile = (id: string) => {
     setImages(prev => prev.filter((el) => el.id !== id));
   }
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const sanitizedValue = DOMPurify.sanitize(e.target.value);
+    setValue(sanitizedValue);
+  };
 
   return (
     <>
@@ -365,7 +383,7 @@ export default function ChatWindow({
             />
             <input
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => handleInputChange(e)}
               onKeyDown={(e) => {
                 const pendingFiles = files.filter(file => file.loading)
                 if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow) handleClick();
