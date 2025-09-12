@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ChatTrigger from "./components/triggerBtn";
 import ChatWindow from "./components/chatWindow";
 import { ChatMessageType, MainChatWidgetProps } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 import { markdownBody, styles } from "./styles";
+import { getSessionWithExpiry } from "./utils";
 
 export default function ChatWidget({
   api_key,
@@ -48,13 +49,17 @@ export default function ChatWidget({
   header_subtitle_style,
   show_chat_status = true,
   attached_file_style,
-  allow_to_send_imgs = false
+  allow_to_send_imgs = false,
+  allow_web_hook
 }: MainChatWidgetProps ) {
-
   const [open, setOpen] = useState(start_open);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
-  const sessionId = useRef(session_id ?? uuidv4());
+  const sessionId = useRef("");
   const triggerRef = useRef<HTMLButtonElement>(null);
+  
+  useLayoutEffect(() => {
+    sessionId.current = session_id ? session_id : getSessionWithExpiry() || uuidv4();
+  }, []);
 
   function updateLastMessage(message: ChatMessageType) {
     setMessages((prev) => {
@@ -124,6 +129,7 @@ export default function ChatWidget({
         show_chat_status={show_chat_status}
         attached_file_style={attached_file_style}
         allow_to_send_imgs={allow_to_send_imgs}
+        allow_web_hook={allow_web_hook}
       />
     </>
   );

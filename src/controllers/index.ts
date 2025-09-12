@@ -10,7 +10,32 @@ export async function handleFlowInfo(baseUrl: string, flowId: string, api_key?:s
     return response.data;
 }
 
-export async function sendMessage(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.MutableRefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>) {
+export async function handlewebhook(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.RefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>
+) {
+    try {
+        let data:any = {};
+        
+        let headers: { [key: string]: string } = { "Content-Type": "application/json" };
+        // headers["ngrok-skip-browser-warning"] = "true";
+        if (api_key) {
+            headers["x-api-key"] = api_key;
+        }
+        
+        data["session_id"] =  sessionId.current || "";
+        data.message =  message;
+        data.origen = "widget"
+        data.stream = false
+        
+        let response = await axios.post(`${baseUrl}/api/v1/webhook/${flowId}`, data, { headers });
+        return response;
+    } catch (error) {
+        console.error("Error in handlewebhook:", error);
+        throw error;
+    }
+    
+}
+
+export async function sendMessage(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.RefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>) {
     let data:any;
     data = {input_type,input_value:message,output_type}
     const allFiles = files?.filter(file => !file.error);
@@ -41,7 +66,7 @@ export async function sendMessage(baseUrl: string, flowId: string, message: stri
     return response;
 }
 
-export async function sendMessageAdvanced(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.MutableRefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>, flowInfo?: any) {
+export async function sendMessageAdvanced(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.RefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>, flowInfo?: any) {
     let data: any = {
         inputs: [
             {
@@ -108,11 +133,13 @@ export async function sendMessageAdvanced(baseUrl: string, flowId: string, messa
         headers = Object.assign(headers, additional_headers);
     }
     
+    if(sessionId.current && sessionId.current !== ""){
+        data.session_id = sessionId.current;
+    }
+    
     let response = axios.post(`${baseUrl}/api/v1/run/advanced/${flowId}`, data,{headers});
     return response;
 }
-
-
 
 
 export async function saveImage(file: File, baseUrl: string, flowId: string, api_key?:string ) {
@@ -136,4 +163,19 @@ export async function saveImage(file: File, baseUrl: string, flowId: string, api
     }
 
     return response.json();
+}
+
+export async function pollingMessages(baseUrl: string, flowId: string, sessionId:React.RefObject<string>, api_key?:string, additional_headers?:{[key:string]:string}) {
+
+    let headers: { [key: string]: string } = { "Content-Type": "application/json" };
+    if (api_key) {
+        headers["x-api-key"] = api_key;
+    }
+
+    if (additional_headers){
+        headers = Object.assign(headers, additional_headers);
+    }
+    let response = axios.get(`${baseUrl}/api/v1/flows/${flowId}/last_messages?session_id=${sessionId.current}&limit=2`, {headers});
+    return response;
+
 }

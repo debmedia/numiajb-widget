@@ -1,9 +1,9 @@
 import { Send } from "lucide-react";
-import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, fileLimit, getAnimationOrigin, getChatPosition, parseDimensions } from "../utils";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
-import {  ChatWindowProps, file } from "../types";
+import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, fileLimit, getAnimationOrigin, getChatPosition, handleMessageResponse, handlewebhookMessageResponse, parseDimensions, setSessionInLocalStorage } from "../utils";
+import React, { ChangeEvent, use, useEffect, useRef, useState } from "react";
+import {  ChatMessageType, ChatWindowProps, file } from "../types";
 import ChatMessage from "./message";
-import { handleFlowInfo, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
+import {  handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
@@ -59,7 +59,8 @@ export default function ChatWindow({
   attached_file_style,
   error_send_text_file_style,
   retry_send_file_btn_style,
-  allow_to_send_imgs
+  allow_to_send_imgs,
+  allow_web_hook
 }: ChatWindowProps) {
   const [value, setValue] = useState<string>("");
   const ref = useRef<HTMLDivElement>(null);
@@ -75,11 +76,41 @@ export default function ChatWindow({
   const [ errorConnectionToFlow, setErrorConnectionToFlow ] = useState<boolean>(false);
   const [ loadingConnection, setLoadingConnection] = useState(false);
   const [ flowInfo, setFlowInfo ] = useState<any>(null);
+  const [ isPollingStarted, setIsPollingStarted ] = useState<boolean>(false);
+  const messagesRef = useRef(messages);
   // Fetch initial flow info 
   useEffect(() => {
     restarFlowConnection();
+    //set the session id in the session storage
+    setSessionInLocalStorage(sessionId.current);
     // eslint-disable-next-line
   }, [])
+
+  useEffect(() => {
+    if(isPollingStarted && allow_web_hook) {
+      messagesRef.current = messages;
+    }
+  }, [messages])
+
+  useEffect(() => {
+    if(isPollingStarted) {
+      const interval = setInterval(() => {
+        pollingMessages(hostUrl, flowId, sessionId, api_key, additional_headers)
+        .then(({data}: any) => {
+          const { messages } = data;
+          if(messages && messages.length > 0) {
+            const filteredMessages = messages.filter((msg:any) => (msg.sender !== 'User' && (msg.message && msg.message.length > 0)) );
+            handlewebhookMessageResponse(filteredMessages, addMessage, messagesRef.current, setSendingMessage);
+          }
+        }).catch((err) => {
+          setErrorConnectionToFlow(true);
+          setIsPollingStarted(false);
+          console.error(err);
+        })
+      }, 30000); // Poll every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isPollingStarted]);
 
   const restarFlowConnection = () => {
     if (loadingConnection) return;
@@ -88,7 +119,8 @@ export default function ChatWindow({
       .then((data) => {
         setFlowInfo(data);
         setFlowName(data.name);
-        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
+        const key = allow_web_hook ? "Webhook" : "ChatInput";
+        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("Webhook"));
         setchatInputId(chatInput && chatInput[0].id);
         setErrorConnectionToFlow(false);
       }).catch((err) => {
@@ -130,24 +162,29 @@ export default function ChatWindow({
   function handleClick() {
     if (value && value.trim() !== "") {
       if(files && files.length > 0) {
-        addMessage({ message: value, isSend: true, files: files.filter((file) => !file.error && !file.loading) });
+        addMessage({ message: value, isSend: true, files: files.filter((file) => !file.error && !file.loading), timestamp: new Date().toISOString() });
         setImages([]);
       } else {
-        addMessage({ message: value, isSend: true });
+        addMessage({ message: value, isSend: true, timestamp: new Date().toISOString() });
       }
-      setSendingMessage(true);
+      if(!allow_web_hook) {
+        setSendingMessage(true);
+      }
       setValue("");
       
       // Choose the appropriate send function based on allow_to_send_imgs
-      const sendFunction = allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
+      // allow_web_hook is used when the conversation is between this widget and the worker platform
+      const sendFunction = allow_web_hook ? handlewebhook : allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
       
       sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files, flowInfo)
         .then((res) => {
-          handleMessageResponse(res);
+          handleMessageResponse(res, output_component, addMessage);
           if (res.data && res.data.session_id) {
             sessionId.current = res.data.session_id;
           }
-          setSendingMessage(false);
+          if(!isPollingStarted && allow_web_hook) {
+            setIsPollingStarted(true);
+          }
         })
         .catch((err) => {
           const response = err.response;
@@ -157,58 +194,14 @@ export default function ChatWindow({
               error: true,
             });
           console.error(err);
-          setSendingMessage(false);
         })
         .finally (() => {
+          setSendingMessage(false);
         })
     }
   }
 
   // Reusable function to handle message response output
-  const handleMessageResponse = (res: any) => {
-    if (
-      res.data &&
-      res.data.outputs &&
-      Object.keys(res.data.outputs).length > 0 &&
-      res.data.outputs[0].outputs && res.data.outputs[0].outputs.length > 0
-    ) {
-      const flowOutputs: Array<any> = res.data.outputs[0].outputs;
-      if (output_component &&
-        flowOutputs.map(e => e.component_id).includes(output_component)) {
-        Object.values(flowOutputs.find(e => e.component_id === output_component).outputs).forEach((output: any) => {
-          addMessage({
-            message: extractMessageFromOutput(output),
-            isSend: false,
-          });
-        })
-      } else if (
-        flowOutputs.length === 1
-      ) {
-        Object.values(flowOutputs[0].outputs).forEach((output: any) => {
-          addMessage({
-            message: extractMessageFromOutput(output),
-            isSend: false,
-          });
-        })
-      } else {
-        flowOutputs
-          .sort((a, b) => {
-            // Get the earliest timestamp from each flowOutput's outputs
-            const aTimestamp = Math.min(...Object.values(a.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
-            const bTimestamp = Math.min(...Object.values(b.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
-            return aTimestamp - bTimestamp; // Sort descending (newest first)
-          })
-          .forEach((flowOutput) => {
-            Object.values(flowOutput.outputs).forEach((output: any) => {
-              addMessage({
-                message: extractMessageFromOutput(output),
-                isSend: false,
-              });
-            });
-          });
-      }
-    }
-  };
 
   // Handle file selection
   const handleFileChange = (

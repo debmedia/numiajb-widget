@@ -1,7 +1,13 @@
+import { ChatMessageType } from "../types";
+
 export const supImgFiles = ["png", "jpg", "jpeg", "gif", "bmp", "webp", "image"];
 export const ALLOWED_IMAGE_INPUT_EXTENSIONS = ["png", "jpg", "jpeg"];
 export const ALLOWED_IMAGE_MIME_TYPES = ["image/png", "image/jpg", "image/jpeg"];
 export const fileLimit =  1 * 1024 * 1024;
+export const SESSION_ID_STORAGE_KEY = "jb_widget_session_id";
+export const SESSION_ID_TTL = 24 * 60 * 60 * 1000; 
+
+
 export function parseDimensions(value : string) {
   const trimmed = value.trim().toLowerCase();
 
@@ -145,4 +151,104 @@ export default function formatFileName(
     return `${baseName.slice(0, numberToTruncate)}...${fileExtension}`;
   }
   return name;
+}
+
+export function setSessionInLocalStorage(value: string) {
+  localStorage.setItem(SESSION_ID_STORAGE_KEY, value);
+}
+
+//return the expired session or null
+export function getSessionWithExpiry() {
+  return (localStorage.getItem(SESSION_ID_STORAGE_KEY) || null);
+}
+
+export function removeSession() {
+	localStorage.removeItem(SESSION_ID_STORAGE_KEY);
+}
+
+
+export const handleMessageResponse = (res: any, output_component: string | undefined, addMessage: Function) => {
+	if (
+	  res.data &&
+	  res.data.outputs &&
+	  Object.keys(res.data.outputs).length > 0 &&
+	  res.data.outputs[0].outputs && res.data.outputs[0].outputs.length > 0
+	) {
+	  const flowOutputs: Array<any> = res.data.outputs[0].outputs;
+	  if (output_component &&
+		flowOutputs.map(e => e.component_id).includes(output_component)) {
+		Object.values(flowOutputs.find(e => e.component_id === output_component).outputs).forEach((output: any) => {
+		  addMessage({
+			message: extractMessageFromOutput(output),
+			isSend: false,
+		  });
+		})
+	  } else if (
+		flowOutputs.length === 1
+	  ) {
+		Object.values(flowOutputs[0].outputs).forEach((output: any) => {
+		  addMessage({
+			message: extractMessageFromOutput(output),
+			isSend: false,
+		  });
+		})
+	  } else {
+		flowOutputs
+		  .sort((a, b) => {
+			// Get the earliest timestamp from each flowOutput's outputs
+			const aTimestamp = Math.min(...Object.values(a.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
+			const bTimestamp = Math.min(...Object.values(b.outputs).map((output: any) => Date.parse(output.message?.timestamp)));
+			return aTimestamp - bTimestamp; // Sort descending (newest first)
+		  })
+		  .forEach((flowOutput) => {
+			Object.values(flowOutput.outputs).forEach((output: any) => {
+			  addMessage({
+				message: extractMessageFromOutput(output),
+				isSend: false,
+			  });
+			});
+		  });
+	  }
+	}
+};
+
+function appendUniqueMessages(
+  previousMessages: ChatMessageType[],
+  newMessages: ChatMessageType[]
+): ChatMessageType[] {
+
+	const existingKeys = new Set(
+		previousMessages.map(m => `${m.timestamp}-${m.message}`)
+	);
+
+	const filteredNew = newMessages.filter(
+		m => !existingKeys.has(`${m.timestamp}-${m.message}`)
+	);
+	if(filteredNew.length === 0) return [];
+
+	const sortedNew = filteredNew.sort(
+		(a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime()
+	);
+
+	return sortedNew;
+}
+
+export const handlewebhookMessageResponse = (res: any, addMessage: Function, previousMessages: ChatMessageType[], setSendingMessage: React.Dispatch<React.SetStateAction<boolean>> ) => {
+	const newFilteredMessages = appendUniqueMessages(previousMessages,res);
+
+	if(newFilteredMessages.length > 0) {
+		setSendingMessage(true);
+		setTimeout(() => {
+			newFilteredMessages.forEach((message: ChatMessageType) => {
+				addMessage({
+				message: message.message,
+				isSend: false,
+				files: message.files,
+				timestamp: message.timestamp,
+				});
+			});
+
+			setSendingMessage(false);
+		}, 800);
+	}
 }

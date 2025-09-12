@@ -44,7 +44,8 @@ export type MainChatWidgetProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
-  allow_to_send_imgs: boolean
+  allow_to_send_imgs: boolean;
+  allow_web_hook: boolean;
 }
 
 export type ChatWindowProps = {
@@ -95,7 +96,8 @@ export type ChatWindowProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
-  allow_to_send_imgs: boolean
+  allow_to_send_imgs: boolean;
+  allow_web_hook: boolean;
 }
 
 export type ChatMessageType = {
@@ -110,7 +112,10 @@ export type ChatMessageType = {
   setModalImg: React.Dispatch<React.SetStateAction<File | undefined>>,
   allow_img_expand: boolean,
   attached_img_style?: React.CSSProperties;
-  attached_file_style?: React.CSSProperties
+  attached_file_style?: React.CSSProperties,
+  timestamp?: string,
+  sender?:string,
+  text?: string
 };
 
 export type FilePreviewProps = {
