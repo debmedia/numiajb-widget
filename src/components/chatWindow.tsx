@@ -1,7 +1,7 @@
 import { Send } from "lucide-react";
-import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, extractMessageFromOutput, fileLimit, getAnimationOrigin, getChatPosition, handleMessageResponse, handlewebhookMessageResponse, parseDimensions, setSessionInLocalStorage } from "../utils";
+import {  handleMessageResponse, handlewebhookMessageResponse } from "../utils/handle-messages";
 import React, { ChangeEvent, use, useEffect, useRef, useState } from "react";
-import {  ChatMessageType, ChatWindowProps, file } from "../types";
+import { ChatWindowProps, file, WebhookeMessage, WebhookResponse } from "../types";
 import ChatMessage from "./message";
 import {  handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
@@ -9,6 +9,10 @@ import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
 import { ModalImg } from "./modalImg";
 import DOMPurify from 'dompurify';
+import { setSessionInLocalStorage } from "../utils/handle-local-storage";
+import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, FILE_LIMIT } from "../constants";
+import { getAnimationOrigin, getChatPosition, parseDimensions } from "../utils/chat-position";
+import { AxiosResponse } from "axios";
 
 
 export default function ChatWindow({
@@ -96,10 +100,10 @@ export default function ChatWindow({
     if(isPollingStarted) {
       const interval = setInterval(() => {
         pollingMessages(hostUrl, flowId, sessionId, api_key, additional_headers)
-        .then(({data}: any) => {
-          const { messages } = data;
+        .then((response: AxiosResponse<WebhookResponse>)=> {
+          const { messages } = response.data;
           if(messages && messages.length > 0) {
-            const filteredMessages = messages.filter((msg:any) => (msg.sender !== 'User' && (msg.message && msg.message.length > 0)) );
+            const filteredMessages = messages.filter((msg:WebhookeMessage) => (msg.sender !== 'User' && (msg.message && msg.message.length > 0)) );
             handlewebhookMessageResponse(filteredMessages, addMessage, messagesRef.current, setSendingMessage);
           }
         }).catch((err) => {
@@ -234,7 +238,7 @@ export default function ChatWindow({
         }, 3000);
         return;
       }
-      const maxSize = fileLimit; // 1 MB
+      const maxSize = FILE_LIMIT; // 1 MB
       if (file.size > maxSize) {
         setUploadError("Archivo demasiado grande (máx 1MB)");
         setTimeout(() => {

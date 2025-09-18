@@ -1,5 +1,5 @@
 import axios from "axios";
-import { file } from "../types";
+import { file, WebhookDataToSend } from "../types";
 
 export async function handleFlowInfo(baseUrl: string, flowId: string, api_key?:string) {
     let headers:{[key:string]:string}= {"Content-Type": "application/json"}
@@ -13,18 +13,17 @@ export async function handleFlowInfo(baseUrl: string, flowId: string, api_key?:s
 export async function handlewebhook(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.RefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>
 ) {
     try {
-        let data:any = {};
-        
+        let data: WebhookDataToSend = {
+            session_id: sessionId.current || "",
+            message: message,
+            origen: "widget",
+            stream: false
+        };
+
         let headers: { [key: string]: string } = { "Content-Type": "application/json" };
-        // headers["ngrok-skip-browser-warning"] = "true";
         if (api_key) {
             headers["x-api-key"] = api_key;
         }
-        
-        data["session_id"] =  sessionId.current || "";
-        data.message =  message;
-        data.origen = "widget"
-        data.stream = false
         
         let response = await axios.post(`${baseUrl}/api/v1/webhook/${flowId}`, data, { headers });
         return response;

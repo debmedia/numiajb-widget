@@ -1,10 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {  useLayoutEffect, useRef, useState } from "react";
 import ChatTrigger from "./components/triggerBtn";
 import ChatWindow from "./components/chatWindow";
 import { ChatMessageType, MainChatWidgetProps } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 import { markdownBody, styles } from "./styles";
-import { getSessionWithExpiry } from "./utils";
+import { getSession } from "./utils/handle-local-storage";
 
 export default function ChatWidget({
   api_key,
@@ -58,7 +58,7 @@ export default function ChatWidget({
   const triggerRef = useRef<HTMLButtonElement>(null);
   
   useLayoutEffect(() => {
-    sessionId.current = session_id ? session_id : getSessionWithExpiry() || uuidv4();
+    sessionId.current = session_id ? session_id : getSession() || uuidv4();
   }, []);
 
   function updateLastMessage(message: ChatMessageType) {

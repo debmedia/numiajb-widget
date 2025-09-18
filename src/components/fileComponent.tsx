@@ -1,6 +1,6 @@
 import React from "react"
-import formatFileName from "../utils"
 import { File } from "lucide-react";
+import formatFileName from "../utils/handle-file-name";
 
 export function FileComponent({
     style,
