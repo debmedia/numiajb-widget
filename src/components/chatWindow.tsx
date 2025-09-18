@@ -120,7 +120,7 @@ export default function ChatWindow({
         setFlowInfo(data);
         setFlowName(data.name);
         const key = allow_web_hook ? "Webhook" : "ChatInput";
-        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("Webhook"));
+        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes(key));
         setchatInputId(chatInput && chatInput[0].id);
         setErrorConnectionToFlow(false);
       }).catch((err) => {
