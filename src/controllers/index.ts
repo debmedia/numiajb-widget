@@ -24,9 +24,8 @@ export async function handlewebhook(baseUrl: string, flowId: string, message: st
         if (api_key) {
             headers["x-api-key"] = api_key;
         }
-        
-        let response = await axios.post(`${baseUrl}/api/v1/webhook/${flowId}`, data, { headers });
-        return response;
+
+        return await axios.post(`${baseUrl}/api/v1/webhook/${flowId}`, data, { headers });
     } catch (error) {
         console.error("Error in handlewebhook:", error);
         throw error;
@@ -61,8 +60,8 @@ export async function sendMessage(baseUrl: string, flowId: string, message: stri
     if(sessionId.current && sessionId.current !== ""){
         data.session_id = sessionId.current;
     }
-    let response = axios.post(`${baseUrl}/api/v1/run/${flowId}`, data,{headers});
-    return response;
+    return axios.post(`${baseUrl}/api/v1/run/${flowId}`, data,{headers});
+    
 }
 
 export async function sendMessageAdvanced(baseUrl: string, flowId: string, message: string,input_type:string,output_type:string,sessionId:React.RefObject<string>,output_component?:string, tweaks?: Object,api_key?:string,additional_headers?:{[key:string]:string}, chatInputID?:string, files?: Array<file>, flowInfo?: any) {
@@ -136,8 +135,7 @@ export async function sendMessageAdvanced(baseUrl: string, flowId: string, messa
         data.session_id = sessionId.current;
     }
     
-    let response = axios.post(`${baseUrl}/api/v1/run/advanced/${flowId}`, data,{headers});
-    return response;
+    return axios.post(`${baseUrl}/api/v1/run/advanced/${flowId}`, data,{headers});
 }
 
 
@@ -174,7 +172,5 @@ export async function pollingMessages(baseUrl: string, flowId: string, sessionId
     if (additional_headers){
         headers = Object.assign(headers, additional_headers);
     }
-    let response = axios.get(`${baseUrl}/api/v1/flows/${flowId}/last_messages?session_id=${sessionId.current}&limit=2`, {headers});
-    return response;
-
+    return axios.get(`${baseUrl}/api/v1/flows/${flowId}/last_messages?session_id=${sessionId.current}&limit=2`, {headers});
 }
