@@ -1,7 +1,4 @@
-export const supImgFiles = ["png", "jpg", "jpeg", "gif", "bmp", "webp", "image"];
-export const ALLOWED_IMAGE_INPUT_EXTENSIONS = ["png", "jpg", "jpeg"];
-export const ALLOWED_IMAGE_MIME_TYPES = ["image/png", "image/jpg", "image/jpeg"];
-export const fileLimit =  1 * 1024 * 1024;
+
 export function parseDimensions(value : string) {
   const trimmed = value.trim().toLowerCase();
 
@@ -122,27 +119,4 @@ export function getAnimationOrigin(position?:string) {
 		default:
 			return "origin-top-left"
 		}
-}
-
-export function extractMessageFromOutput(output:{type:string, message:any}){
-	const {type, message} = output;
-	if(type === "text") return message;
-	if (type ==="message") return message.text;
-	if(type==="object") return message.text;
-	return "Unknown message structure"
-}
-
-export default function formatFileName(
-  name: string,
-  numberToTruncate: number = 25,
-): string {
-  if (name[numberToTruncate] === undefined) {
-    return name;
-  }
-  const fileExtension = name.split(".").pop(); // Get the file extension
-  const baseName = name.slice(0, name.lastIndexOf(".")); // Get the base name without the extension
-  if (baseName.length > 6) {
-    return `${baseName.slice(0, numberToTruncate)}...${fileExtension}`;
-  }
-  return name;
 }

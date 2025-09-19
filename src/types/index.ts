@@ -1,4 +1,5 @@
 
+// Type definitions for journey-builder-chat
 export type MainChatWidgetProps = {
   api_key?: string;
   output_type: string,
@@ -44,9 +45,11 @@ export type MainChatWidgetProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
-  allow_to_send_imgs: boolean
+  allow_to_send_imgs: boolean;
+  allow_web_hook: boolean;
 }
 
+// Props for the ChatWindow component
 export type ChatWindowProps = {
   api_key?: string;
   output_type: string,
@@ -95,9 +98,11 @@ export type ChatWindowProps = {
   attached_file_style?: React.CSSProperties;
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
-  allow_to_send_imgs: boolean
+  allow_to_send_imgs: boolean;
+  allow_web_hook: boolean;
 }
 
+// Type for the ChatMessage 
 export type ChatMessageType = {
   message: string;
   isSend: boolean;
@@ -110,9 +115,13 @@ export type ChatMessageType = {
   setModalImg: React.Dispatch<React.SetStateAction<File | undefined>>,
   allow_img_expand: boolean,
   attached_img_style?: React.CSSProperties;
-  attached_file_style?: React.CSSProperties
+  attached_file_style?: React.CSSProperties,
+  timestamp?: string,
+  sender?:string,
+  text?: string
 };
 
+// Props for the FilePreview component
 export type FilePreviewProps = {
   loading: boolean;
   file: File;
@@ -130,10 +139,12 @@ export type FilePreviewProps = {
   retry_send_file_btn_style?: React.CSSProperties;
 };
 
+// Props for the ChatMessagePlaceholder component
 export type ChatMessagePlaceholderType = {
   bot_message_style?: React.CSSProperties;
 };
 
+// Type for file with additional properties
 export type file = { 
   file:File, 
   file_path?: string, 
@@ -143,3 +154,19 @@ export type file = {
   type: string 
 };
 
+export type WebhookeMessage = {
+  message: string,
+  sender: string,
+  timestamp: string,
+}
+
+export type WebhookResponse = {
+  messages: WebhookeMessage[]
+}
+
+export type WebhookDataToSend = {
+  session_id: string,
+  message: string,
+  origen: string,
+  stream: boolean
+}

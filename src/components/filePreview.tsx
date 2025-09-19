@@ -1,9 +1,9 @@
 import {  RotateCw, X  } from "lucide-react";
-import { supImgFiles } from "../utils";
 import DeleteFile from "./deleteFile";
 import { FilePreviewProps } from "../types";
 import { FileComponent } from "./fileComponent";
 import { Imagen } from "./imagen";
+import { supImgFiles } from "../constants";
 
 export default function FilePreview({
     error,

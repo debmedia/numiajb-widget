@@ -1,9 +1,9 @@
 import Markdown from "react-markdown";
 import { ChatMessageType } from "../types";
 import rehypeMathjax from "rehype-mathjax";
-import { supImgFiles } from "../utils";
 import { FileComponent } from "./fileComponent";
 import { Imagen } from "./imagen";
+import { supImgFiles } from "../constants";
 
 export default function ChatMessage({
   message,
