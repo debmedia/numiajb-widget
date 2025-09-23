@@ -66,6 +66,7 @@ export default function ChatWindow({
   allow_to_send_imgs,
   allow_web_hook
 }: ChatWindowProps) {
+  const [allowWebHook, setAllowWebHook] = useState<boolean>(allow_web_hook ?? false);
   const [value, setValue] = useState<string>("");
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,7 +92,7 @@ export default function ChatWindow({
   }, [])
 
   useEffect(() => {
-    if(isPollingStarted && allow_web_hook) {
+    if(isPollingStarted && allowWebHook) {
       messagesRef.current = messages;
     }
   }, [messages])
@@ -123,8 +124,10 @@ export default function ChatWindow({
       .then((data) => {
         setFlowInfo(data);
         setFlowName(data.name);
-        const key = allow_web_hook ? "Webhook" : "ChatInput";
-        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes(key));
+        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("Webhook") || node.id.includes("ChatInput"));
+        if(chatInput && chatInput[0].id && chatInput[0].id.includes("Webhook")) {
+          setAllowWebHook(true);
+        }
         setchatInputId(chatInput && chatInput[0].id);
         setErrorConnectionToFlow(false);
       }).catch((err) => {
@@ -171,14 +174,14 @@ export default function ChatWindow({
       } else {
         addMessage({ message: value, isSend: true, timestamp: new Date().toISOString() });
       }
-      if(!allow_web_hook) {
+      if(!allowWebHook) {
         setSendingMessage(true);
       }
       setValue("");
       
       // Choose the appropriate send function based on allow_to_send_imgs
-      // allow_web_hook is used when the conversation is between this widget and the worker platform
-      const sendFunction = allow_web_hook ? handlewebhook : allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
+      // allowWebHook is used when the conversation is between this widget and the worker platform
+      const sendFunction = allowWebHook ? handlewebhook : allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
       
       sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files, flowInfo)
         .then((res) => {
@@ -186,7 +189,7 @@ export default function ChatWindow({
           if (res.data && res.data.session_id) {
             sessionId.current = res.data.session_id;
           }
-          if(!isPollingStarted && allow_web_hook) {
+          if(!isPollingStarted && allowWebHook) {
             setIsPollingStarted(true);
           }
         })
