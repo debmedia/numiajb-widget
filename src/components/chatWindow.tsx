@@ -3,7 +3,7 @@ import {  handleMessageResponse, handlewebhookMessageResponse } from "../utils/h
 import React, { ChangeEvent, use, useEffect, useRef, useState } from "react";
 import { ChatWindowProps, file, WebhookeMessage, WebhookResponse } from "../types";
 import ChatMessage from "./message";
-import {  handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage, sendMessageAdvanced } from "../controllers";
+import {  handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
@@ -181,9 +181,9 @@ export default function ChatWindow({
       
       // Choose the appropriate send function based on allow_to_send_imgs
       // allowWebHook is used when the conversation is between this widget and the worker platform
-      const sendFunction = allowWebHook ? handlewebhook : allow_to_send_imgs ? sendMessageAdvanced : sendMessage;
+      const sendFunction = allowWebHook ? handlewebhook : sendMessage;
       
-      sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files, flowInfo)
+      sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
         .then((res) => {
           handleMessageResponse(res, output_component, addMessage);
           if (res.data && res.data.session_id) {
