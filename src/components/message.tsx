@@ -27,6 +27,14 @@ export default function ChatMessage({
     return 'more';
   };
 
+  function formatMessageWithLinks(text: string): string {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+      return `[${url}](${url})`; // markdown link
+    });
+  }
+
+
   return (
     <div
       className={"cl-chat-message" + (isSend ? " cl-justify-end" : "cl-justify-start")}
@@ -84,12 +92,22 @@ export default function ChatMessage({
             className={"markdown-body prose flex flex-col word-break-break-word font-patched-md"}
             rehypePlugins={[rehypeMathjax]}
             components={{
+              a: ({ href, children }: any) => (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-600"
+                >
+                  {children}
+                </a>
+              ),
               p: ({ children }) => (
                 <p style={{ whiteSpace: 'pre-wrap' }}>{children}</p>
               ),
             }}
           >
-            {message}
+            {formatMessageWithLinks(message)}
           </Markdown>
         </div>
       )}
