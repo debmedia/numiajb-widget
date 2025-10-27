@@ -90,7 +90,7 @@ export const sendMessageBySocket = (
   message: string,
 ) => {
   client!
-  .sendMessageTextEvent(vonageConversationID, message)
+  .sendMessageTextEvent(vonageConversationID, `\u200B ${message}`)
 }
 
 export const handleEventsFromSocket = (
@@ -124,16 +124,22 @@ export const handleEventsFromSocket = (
         }
 
         if(message.type === MessageType.DELIMITER) {
-          if(message.msg == "FINISH" || message.msg == "REVOKE") {
-            leaveConversation(setIsWebSocket);
+          if(message.msg == "FINISH" || message.msg == "REVOKE" || message.msg == "DERIVATE") { 
             setMessages((prev: any) => [...prev, {
-              message: message.msg == "REVOKE" ? "El agente ha finalizado la conversación por falta de respuesta." : "El agente ha finalizado la conversación.",
+              message: message.msg == "REVOKE" ? "El agente ha finalizado la conversación por falta de respuesta." : 
+              message.msg == "DERIVATE" ? "Tu conversación ha sido derivada a otro agente. Por favor aguarda a ser atendido." :
+              "El agente ha finalizado la conversación.",
               isSend: false,
               timestamp: event.timestamp,
               sender: "Agent",
               id: event.id,
               status: messageStatus
             }])
+            if(message.msg == "DERIVATE"){ 
+              setIsWaitingForResponse && setIsWaitingForResponse(true);
+            } else {
+              leaveConversation(setIsWebSocket);
+            }
             return;
           }
         }
