@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@r2wc/react-to-web-component": "^2.0.4",
+    "@vonage/client-sdk": "^2.1.0",
     "axios": "^1.4.0",
     "dompurify": "^3.2.6",
     "lucide-react": "^0.525.0",

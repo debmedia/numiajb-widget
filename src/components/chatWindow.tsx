@@ -1,9 +1,9 @@
-import { Send } from "lucide-react";
+import { LoaderCircle, Send } from "lucide-react";
 import {  handleMessageResponse, handlewebhookMessageResponse } from "../utils/handle-messages";
-import React, { ChangeEvent, use, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatWindowProps, file, WebhookeMessage, WebhookResponse } from "../types";
 import ChatMessage from "./message";
-import {  handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage } from "../controllers";
+import {  getVonageInfo, handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
@@ -13,6 +13,8 @@ import { setSessionInLocalStorage } from "../utils/handle-local-storage";
 import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, FILE_LIMIT } from "../constants";
 import { getAnimationOrigin, getChatPosition, parseDimensions } from "../utils/chat-position";
 import { AxiosResponse } from "axios";
+import VonageClient, { ClientConfig, ConfigRegion, LoggingLevel } from "@vonage/client-sdk";
+import { connectSocket,  sendMessageBySocket } from "../utils/handle-socket";
 
 
 export default function ChatWindow({
@@ -64,14 +66,13 @@ export default function ChatWindow({
   error_send_text_file_style,
   retry_send_file_btn_style,
   allow_to_send_imgs,
-  allow_web_hook
+  setMessages
 }: ChatWindowProps) {
-  const [allowWebHook, setAllowWebHook] = useState<boolean>(allow_web_hook ?? false);
   const [value, setValue] = useState<string>("");
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [windowPosition, setWindowPosition] = useState({ left: "0", top: "0" });
-  const inputRef = useRef<HTMLInputElement>(null); 
+  const inputRef = useRef<HTMLTextAreaElement>(null); 
   const [sendingMessage, setSendingMessage] = useState(false);
   const [ files, setImages ] = useState<Array<file>>([]);
   const [ chatInputID, setchatInputId ] = useState<string>("");
@@ -80,54 +81,48 @@ export default function ChatWindow({
   const [ uploadError, setUploadError ] = useState<string | boolean>(false);
   const [ errorConnectionToFlow, setErrorConnectionToFlow ] = useState<boolean>(false);
   const [ loadingConnection, setLoadingConnection] = useState(false);
-  const [ flowInfo, setFlowInfo ] = useState<any>(null);
-  const [ isPollingStarted, setIsPollingStarted ] = useState<boolean>(false);
-  const messagesRef = useRef(messages);
-  // Fetch initial flow info 
+  const [ isWebSocket, setIsWebSocket ] = useState<boolean>(false);
+  const [ clientInstance, setClientInstance ] = useState<VonageClient | null>(null);
+  const [ conversationId, setConversationId ] = useState<string>("");
+  const [ loader, setLoader ] = useState<boolean>(false);
+  const [ sendingWebhookMessage, setSendingWebhookMessage ] = useState<boolean>(false);
+
   useEffect(() => {
+    if(isWebSocket && !clientInstance) {
+      getVonageInfo(hostUrl, sessionId, api_key)
+      .then(async ({ data }) => {
+        setConversationId(data.vonageSessionId);
+        setClientInstance(await connectSocket(
+          data.vonage_jwt, 
+          data.vonageSessionId, 
+          data.chatUserId, 
+          setMessages, 
+          setSendingMessage,
+          setLoader,
+          setIsWebSocket,
+        ));
+      })
+    }
+    if(!isWebSocket && clientInstance) {
+      setClientInstance(null);
+    }
+  }, [isWebSocket])
+
+
+  useEffect(() => {
+    // Fetch initial flow info and set the session id in the session storage
     restarFlowConnection();
-    //set the session id in the session storage
     setSessionInLocalStorage(sessionId.current);
     // eslint-disable-next-line
   }, [])
-
-  useEffect(() => {
-    if(isPollingStarted && allowWebHook) {
-      messagesRef.current = messages;
-    }
-  }, [messages])
-
-  useEffect(() => {
-    if(isPollingStarted) {
-      const interval = setInterval(() => {
-        pollingMessages(hostUrl, flowId, sessionId, api_key, additional_headers)
-        .then((response: AxiosResponse<WebhookResponse>)=> {
-          const { messages } = response.data;
-          if(messages && messages.length > 0) {
-            const filteredMessages = messages.filter((msg:WebhookeMessage) => (msg.sender !== 'User' && (msg.message && msg.message.length > 0)) );
-            handlewebhookMessageResponse(filteredMessages, addMessage, messagesRef.current, setSendingMessage);
-          }
-        }).catch((err) => {
-          setErrorConnectionToFlow(true);
-          setIsPollingStarted(false);
-          console.error(err);
-        })
-      }, 30000); // Poll every 30 seconds
-      return () => clearInterval(interval);
-    }
-  }, [isPollingStarted]);
 
   const restarFlowConnection = () => {
     if (loadingConnection) return;
     setLoadingConnection(true);
     handleFlowInfo(hostUrl, flowId, api_key)
       .then((data) => {
-        setFlowInfo(data);
         setFlowName(data.name);
-        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("Webhook") || node.id.includes("ChatInput"));
-        if(chatInput && chatInput[0].id && chatInput[0].id.includes("Webhook")) {
-          setAllowWebHook(true);
-        }
+        const chatInput = data.data.nodes?.filter((node: any) => node.id.includes("ChatInput"));
         setchatInputId(chatInput && chatInput[0].id);
         setErrorConnectionToFlow(false);
       }).catch((err) => {
@@ -142,12 +137,7 @@ export default function ChatWindow({
   useEffect(() => {
     if (triggerRef)
       setWindowPosition(
-        getChatPosition(
-          triggerRef.current!.getBoundingClientRect(),
-          width,
-          height,
-          position
-        )
+        getChatPosition( triggerRef.current!.getBoundingClientRect(), width, height, position)
       );
   }, [triggerRef, width, height, position]);
 
@@ -156,7 +146,7 @@ export default function ChatWindow({
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [messages, files]);
+  }, [messages, files, sendingMessage]);
 
   useEffect(() => {
     // after a slight delay
@@ -168,38 +158,42 @@ export default function ChatWindow({
   //  Handle sending a message (text and/or image)
   function handleClick() {
     if (value && value.trim() !== "") {
-      if(files && files.length > 0) {
-        addMessage({ message: value, isSend: true, files: files.filter((file) => !file.error && !file.loading), timestamp: new Date().toISOString() });
-        setImages([]);
-      } else {
-        addMessage({ message: value, isSend: true, timestamp: new Date().toISOString() });
-      }
-      if(!allowWebHook) {
-        setSendingMessage(true);
+      if(!isWebSocket) {
+        if(files && files.length > 0) {
+          addMessage({ message: value, isSend: true, files: files.filter((file) => !file.error && !file.loading), timestamp: new Date().toISOString() });
+          setImages([]);
+        } else {
+          addMessage({ message: value, isSend: true, timestamp: new Date().toISOString() });
+        }
       }
       setValue("");
-      
-      // Choose the appropriate send function based on allow_to_send_imgs
-      // allowWebHook is used when the conversation is between this widget and the worker platform
-      const sendFunction = allowWebHook ? handlewebhook : sendMessage;
-      
-      sendFunction(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
+
+      if(!isWebSocket) {
+        setSendingMessage(true);
+      }
+
+      if(isWebSocket) {
+        setLoader(true);
+        sendMessageBySocket(value);
+        return;
+      }
+      sendMessage(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
         .then((res) => {
           handleMessageResponse(res, output_component, addMessage);
           if (res.data && res.data.session_id) {
             sessionId.current = res.data.session_id;
           }
-          if(!isPollingStarted && allowWebHook) {
-            setIsPollingStarted(true);
+          if (res.data?.outputs[0]?.outputs[0]?.results?.message?.is_session_close) {
+            setIsWebSocket(true);
           }
         })
         .catch((err) => {
           const response = err.response;
           updateLastMessage({
-              message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status || ""})`,
-              isSend: false,
-              error: true,
-            });
+            message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status || ""})`,
+            isSend: false,
+            error: true,
+          });
           console.error(err);
         })
         .finally (() => {
@@ -207,8 +201,6 @@ export default function ChatWindow({
         })
     }
   }
-
-  // Reusable function to handle message response output
 
   // Handle file selection
   const handleFileChange = (
@@ -286,10 +278,26 @@ export default function ChatWindow({
     setImages(prev => prev.filter((el) => el.id !== id));
   }
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    if(e.target.value.length > 1 && !sendingWebhookMessage && isWebSocket) {
+      setSendingWebhookMessage(true);
+      clientInstance?.sendEphemeralEvent(conversationId, { typing: true });
+    } else {
+      if(e.target.value.length === 0 && isWebSocket){
+        setSendingWebhookMessage(false);
+        clientInstance?.sendEphemeralEvent(conversationId, { typing: false });
+      }
+    }
     const sanitizedValue = DOMPurify.sanitize(e.target.value);
     setValue(sanitizedValue);
   };
+
+  const handleInputFocus = (e: React.FocusEvent<HTMLTextAreaElement, Element>) => {
+    if(isWebSocket) {
+      clientInstance?.sendEphemeralEvent(conversationId, { typing: false });
+      setSendingWebhookMessage(false);
+    }
+  }
 
   return (
     <>
@@ -334,10 +342,7 @@ export default function ChatWindow({
             {messages.map((message, index) => (
               <ChatMessage
                 key={index}
-                message={message.message}
-                isSend={message.isSend}
-                files={message.files}
-                error={message.error}
+                message={message}
                 attached_img_grid_style={attached_img_grid_style}
                 setModalImg={setModalImg}
                 allow_img_expand={allow_img_expand}
@@ -346,7 +351,6 @@ export default function ChatWindow({
                 user_message_style={user_message_style}
                 error_message_style={error_message_style}
                 attached_file_style={attached_file_style}
-              
               />
             ))}
             {sendingMessage && (
@@ -381,30 +385,34 @@ export default function ChatWindow({
               allow_to_send_imgs={allow_to_send_imgs}
               disabled={errorConnectionToFlow}
             />
-            <input
+            <textarea
               value={value}
               onChange={(e) => handleInputChange(e)}
               onKeyDown={(e) => {
                 const pendingFiles = files.filter(file => file.loading)
                 if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow) handleClick();
               }}
-              type="text"
+              onBlur={(e) => handleInputFocus(e)}
               maxLength={500}
-              disabled={sendingMessage}
-              placeholder={sendingMessage ? (placeholder_sending || "Procesando...") : (placeholder || "Envía un mensaje...")}
+              disabled={(!isWebSocket && sendingMessage )}
+              placeholder={(!isWebSocket && sendingMessage ) ? (placeholder_sending || "Procesando...") : (placeholder || "Envía un mensaje...")}
               style={input_style}
               ref={inputRef}
               className="cl-input-element font-patched-md"
             />
             <button
               style={send_button_style}
-              disabled={errorConnectionToFlow || (sendingMessage) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
+              disabled={loader || errorConnectionToFlow || (!isWebSocket && sendingMessage ) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
               onClick={handleClick}
               className="cl-button-send-msg"
             >
-              <Send
-                style={send_icon_style}
-              />
+              {loader ? 
+                <LoaderCircle className="spinner" /> 
+                :
+                <Send
+                  style={send_icon_style}
+                />
+              }
             </button>
           </div>
         </div>

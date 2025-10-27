@@ -53,6 +53,7 @@ export const styles = `
     margin: 0;
     /* 1 */
     line-height: inherit;
+    font-size: 16px;
     /* 2 */
   }
 
@@ -585,6 +586,16 @@ export const styles = `
     padding-bottom: 0.5rem;
     overscroll-behavior: contain; 
   }
+  .cl-message-timestamp {
+    margin: 0px;
+    font-size: 10px;
+    color: #a2a5a8;
+    margin-left: 10px;
+    display: flex;
+    align-items: flex-end;
+    height:auto;
+    white-space: nowrap;
+  }
   .cl-input_container {
     display: flex;
     width: 100%;
@@ -722,8 +733,9 @@ export const styles = `
     flex-direction: column;
     width: 100%;
     gap: 8px;
-    padding: 10px;
-    
+  }
+  .spinner {
+    animation: spin 2s linear infinite;
   }
   @-webkit-keyframes pulse {
     50% {
@@ -752,6 +764,10 @@ export const styles = `
     font-weight: 300;
     background-color: var(--base-white);
     color: rgb(17 24 39);
+    resize: none;
+    line-height: 1.25rem;
+    max-height: calc(1.5rem * 4);
+    min-height: 1rem;
   }
   .cl-input-element:focus {
     outline: 2px solid transparent;
@@ -2197,4 +2213,12 @@ export const markdownBody = `
     margin-top: 0 !important;
   }
 
+  @keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start at 0 degrees rotation */
+  }
+  100% {
+    transform: rotate(360deg); /* End at 360 degrees rotation for a full spin */
+  }
+}
 `

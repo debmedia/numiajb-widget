@@ -46,7 +46,6 @@ export type MainChatWidgetProps = {
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
   allow_to_send_imgs: boolean;
-  allow_web_hook: boolean;
 }
 
 // Props for the ChatWindow component
@@ -99,7 +98,14 @@ export type ChatWindowProps = {
   error_send_text_file_style?: React.CSSProperties;
   retry_send_file_btn_style?: React.CSSProperties;
   allow_to_send_imgs: boolean;
-  allow_web_hook: boolean;
+  setMessages:  React.Dispatch<React.SetStateAction<ChatMessageType[]>>
+}
+
+export enum MessageStatus {
+  PENDING = 'PENDING',
+  SENT = 'SENT',
+  WARNING = 'WARNING',
+  SEEN = 'SEEN'
 }
 
 // Type for the ChatMessage 
@@ -108,18 +114,24 @@ export type ChatMessageType = {
   isSend: boolean;
   error?: boolean;
   files?: Array<file>,
+  timestamp?: string,
+  sender?:string,
+  text?: string,
+  id?: number | string,
+  status?: MessageStatus
+};
+
+export type ChatMessageProps = {
+  message: ChatMessageType;
   bot_message_style?: React.CSSProperties;
   user_message_style?: React.CSSProperties;
   error_message_style?: React.CSSProperties;
   attached_img_grid_style?: React.CSSProperties;
-  setModalImg: React.Dispatch<React.SetStateAction<File | undefined>>,
-  allow_img_expand: boolean,
+  setModalImg: React.Dispatch<React.SetStateAction<File | undefined>>;
+  allow_img_expand: boolean;
   attached_img_style?: React.CSSProperties;
-  attached_file_style?: React.CSSProperties,
-  timestamp?: string,
-  sender?:string,
-  text?: string
-};
+  attached_file_style?: React.CSSProperties;
+}
 
 // Props for the FilePreview component
 export type FilePreviewProps = {
@@ -169,4 +181,13 @@ export type WebhookDataToSend = {
   message: string,
   origen: string,
   stream: boolean
+}
+
+export enum MessageType {
+  TEXT = 'TEXT',
+  FILE = 'FILE',
+  AUDIO = 'AUDIO',
+  VIDEO = 'VIDEO',
+  IMAGE = 'IMAGE',
+  DELIMITER = 'DELIMITER'
 }

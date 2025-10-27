@@ -32,7 +32,7 @@ export default function FilePreview({
                 >
                     {error ? 
                         <>
-                            <p style={error_send_text_file_style}>Error al enviar</p>
+                            <p style={error_send_text_file_style}>Error</p>
                             <button    
                                 style={retry_send_file_btn_style}
                                 className="retry-send-file-btn" 

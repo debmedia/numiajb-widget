@@ -50,7 +50,6 @@ export default function ChatWidget({
   show_chat_status = true,
   attached_file_style,
   allow_to_send_imgs = false,
-  allow_web_hook
 }: MainChatWidgetProps ) {
   const [open, setOpen] = useState(start_open);
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -70,7 +69,9 @@ export default function ChatWidget({
   }
 
   function addMessage(message: ChatMessageType) {
-    setMessages((prev) => [...prev, message]);
+    setMessages((prev) => {
+      return [...prev, message];
+    });
   }
 
   return (
@@ -129,7 +130,7 @@ export default function ChatWidget({
         show_chat_status={show_chat_status}
         attached_file_style={attached_file_style}
         allow_to_send_imgs={allow_to_send_imgs}
-        allow_web_hook={allow_web_hook}
+        setMessages={setMessages}
       />
     </>
   );
