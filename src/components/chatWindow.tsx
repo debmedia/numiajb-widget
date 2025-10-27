@@ -93,7 +93,8 @@ export default function ChatWindow({
       getVonageInfo(hostUrl, sessionId, api_key)
       .then(async ({ data }) => {
         setConversationId(data.vonageSessionId);
-        setClientInstance(await connectSocket(
+        setClientInstance(
+          await connectSocket(
           data.vonage_jwt, 
           data.vonageSessionId, 
           data.chatUserId, 

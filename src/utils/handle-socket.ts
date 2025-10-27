@@ -45,7 +45,7 @@ export const connectSocket = async (
               setSendingMessage, 
               setLoader,
               setIsWebSocket,
-              setIsWaitingForResponse
+              setIsWaitingForResponse,
             );
           }
         });
@@ -210,7 +210,9 @@ const updateMessageStatus = (
   );
 };
 
-const leaveConversation = async (setIsWebSocket?: React.Dispatch<React.SetStateAction<boolean>>) => {
+const leaveConversation = async (
+  setIsWebSocket?: React.Dispatch<React.SetStateAction<boolean>>,  
+) => {
   await client?.leaveConversation(vonageConversationID);
   await client?.deleteSession();
   setIsWebSocket && setIsWebSocket(false);
