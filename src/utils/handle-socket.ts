@@ -4,13 +4,15 @@ import { ChatMessageType, MessageStatus, MessageType } from "../types";
 const config = new ClientConfig(ConfigRegion.US);
 export let client: VonageClient | null = null;
 let vonageConversationID: string = "" 
-
+let memberID: string = ""
 
 export const connectSocket = async (
   token: string, 
   conversationId: string, 
   userId: string, 
   setMessages: React.Dispatch<React.SetStateAction<ChatMessageType[]>>,
+  setIsWaitingForResponse: React.Dispatch<React.SetStateAction<boolean>>,
+  setAllowToSendImgs: React.Dispatch<React.SetStateAction<boolean>>,
   setSendingMessage: React.Dispatch<React.SetStateAction<boolean>>,
   setLoader?: React.Dispatch<React.SetStateAction<boolean>>,
   setIsWebSocket?: React.Dispatch<React.SetStateAction<boolean>>,
@@ -30,16 +32,22 @@ export const connectSocket = async (
       client!
       .joinConversation(conversationId)
       .then((memberId) => {
+        memberID = memberId;
+        setIsWaitingForResponse(true);
+        setAllowToSendImgs(false);
         client!.on("conversationEvent", (event: ConversationEvent) => {
-          handleEventsFromSocket(
-            event, 
-            userId, 
-            setMessages,
-            undefined, 
-            setSendingMessage, 
-            setLoader,
-            setIsWebSocket
-          );
+          if(event.conversationId === vonageConversationID) {
+              handleEventsFromSocket(
+              event, 
+              userId, 
+              setMessages,
+              undefined, 
+              setSendingMessage, 
+              setLoader,
+              setIsWebSocket,
+              setIsWaitingForResponse
+            );
+          }
         });
       }).catch(error => {
         console.error("Error joining conversation: ", error);
@@ -92,7 +100,8 @@ export const handleEventsFromSocket = (
   messageStatus: MessageStatus = MessageStatus.PENDING,
   setSendingMessage?: React.Dispatch<React.SetStateAction<boolean>>,
   setLoader?: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsWebSocket?: React.Dispatch<React.SetStateAction<boolean>>
+  setIsWebSocket?: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsWaitingForResponse?: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
     if (event.body.text) {
       event.body.text = event.body.text.replace(/\\u0022/g, '"');
@@ -110,14 +119,15 @@ export const handleEventsFromSocket = (
         const senderId = (event.from as any)?.user?.id;
 
         if(senderId != userId) {
-          if(setSendingMessage) setSendingMessage(false);
+          setIsWaitingForResponse && setIsWaitingForResponse(false);
+          setSendingMessage && setSendingMessage(false);
         }
 
         if(message.type === MessageType.DELIMITER) {
-          if(message.msg == "FINISH") {
+          if(message.msg == "FINISH" || message.msg == "REVOKE") {
             leaveConversation(setIsWebSocket);
             setMessages((prev: any) => [...prev, {
-              message: "El agente ha finalizado la conversación.",
+              message: message.msg == "REVOKE" ? "El agente ha finalizado la conversación por falta de respuesta." : "El agente ha finalizado la conversación.",
               isSend: false,
               timestamp: event.timestamp,
               sender: "Agent",
@@ -172,7 +182,7 @@ export const handleEventsFromSocket = (
           } else {
             if(setSendingMessage) setSendingMessage(false);
           }
-        }
+        } 
         break;
       case "custom":
         break;

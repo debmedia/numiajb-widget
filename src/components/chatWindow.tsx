@@ -1,9 +1,9 @@
 import { LoaderCircle, Send } from "lucide-react";
-import {  handleMessageResponse, handlewebhookMessageResponse } from "../utils/handle-messages";
-import React, { ChangeEvent, use, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChatWindowProps, file, WebhookeMessage, WebhookResponse } from "../types";
+import {  handleMessageResponse } from "../utils/handle-messages";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChatWindowProps, file,  } from "../types";
 import ChatMessage from "./message";
-import {  getVonageInfo, handleFlowInfo, handlewebhook, pollingMessages, saveImage, sendMessage } from "../controllers";
+import {  getVonageInfo, handleFlowInfo, saveImage, sendMessage } from "../controllers";
 import ChatMessagePlaceholder from "./chatPlaceholder";
 import ImageUploadBtn from "./imageUploadBtn";
 import FilePreview from "./filePreview";
@@ -12,8 +12,7 @@ import DOMPurify from 'dompurify';
 import { setSessionInLocalStorage } from "../utils/handle-local-storage";
 import { ALLOWED_IMAGE_INPUT_EXTENSIONS, ALLOWED_IMAGE_MIME_TYPES, FILE_LIMIT } from "../constants";
 import { getAnimationOrigin, getChatPosition, parseDimensions } from "../utils/chat-position";
-import { AxiosResponse } from "axios";
-import VonageClient, { ClientConfig, ConfigRegion, LoggingLevel } from "@vonage/client-sdk";
+import VonageClient from "@vonage/client-sdk";
 import { connectSocket,  sendMessageBySocket } from "../utils/handle-socket";
 
 
@@ -86,6 +85,8 @@ export default function ChatWindow({
   const [ conversationId, setConversationId ] = useState<string>("");
   const [ loader, setLoader ] = useState<boolean>(false);
   const [ sendingWebhookMessage, setSendingWebhookMessage ] = useState<boolean>(false);
+  const [ isWaitingForResponse, setIsWaitingForResponse ] = useState<boolean>(false);
+  const [ allowToSendImgs, setAllowToSendImgs ] = useState<boolean>(allow_to_send_imgs);
 
   useEffect(() => {
     if(isWebSocket && !clientInstance) {
@@ -97,6 +98,8 @@ export default function ChatWindow({
           data.vonageSessionId, 
           data.chatUserId, 
           setMessages, 
+          setIsWaitingForResponse,
+          setAllowToSendImgs,
           setSendingMessage,
           setLoader,
           setIsWebSocket,
@@ -105,6 +108,7 @@ export default function ChatWindow({
     }
     if(!isWebSocket && clientInstance) {
       setClientInstance(null);
+      setAllowToSendImgs(allow_to_send_imgs);
     }
   }, [isWebSocket])
 
@@ -382,7 +386,7 @@ export default function ChatWindow({
               handleImagenChange={handleFileChange}
               attach_img_button_style={attach_img_button_style}
               uploadError={uploadError}
-              allow_to_send_imgs={allow_to_send_imgs}
+              allow_to_send_imgs={allowToSendImgs}
               disabled={errorConnectionToFlow}
             />
             <textarea
@@ -390,11 +394,11 @@ export default function ChatWindow({
               onChange={(e) => handleInputChange(e)}
               onKeyDown={(e) => {
                 const pendingFiles = files.filter(file => file.loading)
-                if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow) handleClick();
+                if (e.key === "Enter" && pendingFiles.length == 0 && !errorConnectionToFlow && !isWaitingForResponse) handleClick();
               }}
               onBlur={(e) => handleInputFocus(e)}
               maxLength={500}
-              disabled={(!isWebSocket && sendingMessage )}
+              disabled={(!isWebSocket && sendingMessage) || (isWebSocket && isWaitingForResponse)}
               placeholder={(!isWebSocket && sendingMessage ) ? (placeholder_sending || "Procesando...") : (placeholder || "Envía un mensaje...")}
               style={input_style}
               ref={inputRef}
@@ -402,7 +406,7 @@ export default function ChatWindow({
             />
             <button
               style={send_button_style}
-              disabled={loader || errorConnectionToFlow || (!isWebSocket && sendingMessage ) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
+              disabled={isWaitingForResponse || loader || errorConnectionToFlow || (!isWebSocket && sendingMessage ) || (value.length === 0) || (files.length > 0 && files.some(file => file.loading))}
               onClick={handleClick}
               className="cl-button-send-msg"
             >

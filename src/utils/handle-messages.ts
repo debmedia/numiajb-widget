@@ -1,5 +1,3 @@
-import { ChatMessageType } from "../types";
-
 export function extractMessageFromOutput(output:{type:string, message:any}){
     const {type, message} = output;
     if(type === "text") return message;
@@ -52,45 +50,3 @@ export const handleMessageResponse = (res: any, output_component: string | undef
       }
     }
 };
-
-function appendUniqueMessages(
-  previousMessages: ChatMessageType[],
-  newMessages: ChatMessageType[]
-): ChatMessageType[] {
-
-    const existingKeys = new Set(
-        previousMessages.map(m => `${m.timestamp}-${m.message}`)
-    );
-
-    const filteredNew = newMessages.filter(
-        m => !existingKeys.has(`${m.timestamp}-${m.message}`)
-    );
-    if(filteredNew.length === 0) return [];
-
-    const sortedNew = filteredNew.sort(
-        (a, b) => new Date(a.timestamp!).getTime() - new Date(b.timestamp!).getTime()
-    );
-
-    return sortedNew;
-}
-
-// Handles the response from a webhook message
-export const handlewebhookMessageResponse = (res: any, addMessage: Function, previousMessages: ChatMessageType[], setSendingMessage: React.Dispatch<React.SetStateAction<boolean>> ) => {
-    const newFilteredMessages = appendUniqueMessages(previousMessages,res);
-
-    if(newFilteredMessages.length > 0) {
-        setSendingMessage(true);
-        setTimeout(() => {
-            newFilteredMessages.forEach((message: ChatMessageType) => {
-                addMessage({
-                message: message.message,
-                isSend: false,
-                files: message.files,
-                timestamp: message.timestamp,
-                });
-            });
-
-            setSendingMessage(false);
-        }, 800);
-    }
-}

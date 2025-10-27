@@ -69,9 +69,7 @@ export default function ChatWidget({
   }
 
   function addMessage(message: ChatMessageType) {
-    setMessages((prev) => {
-      return [...prev, message];
-    });
+    setMessages((prev) =>  [...prev, message]);
   }
 
   return (
