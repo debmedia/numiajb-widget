@@ -108,3 +108,19 @@ export async function pollingMessages(baseUrl: string, flowId: string, sessionId
     }
     return axios.get(`${baseUrl}/api/v1/flows/${flowId}/last_messages?session_id=${sessionId.current}&limit=2`, {headers});
 }
+
+
+export async function getVonageInfo(baseUrl: string, sessionId:React.RefObject<string>, api_key?:string, additional_headers?:{[key:string]:string}) {
+
+    let headers: { [key: string]: string } = { "Content-Type": "application/json" };
+    if (api_key) {
+        headers["x-api-key"] = api_key;
+    }
+    
+    if (additional_headers){
+        headers = Object.assign(headers, additional_headers);
+    }
+    
+    return axios.get(`${baseUrl}/api/v1/redis/${sessionId.current}`, {headers});
+}
+

@@ -1,4 +1,4 @@
-import {  RotateCw, X  } from "lucide-react";
+import {  FileWarning, RotateCw, X  } from "lucide-react";
 import DeleteFile from "./deleteFile";
 import { FilePreviewProps } from "../types";
 import { FileComponent } from "./fileComponent";
@@ -32,26 +32,25 @@ export default function FilePreview({
                 >
                     {error ? 
                         <>
-                            <p style={error_send_text_file_style}>Error al enviar</p>
-                            <button    
-                                style={retry_send_file_btn_style}
-                                className="retry-send-file-btn" 
-                                onClick={() => retrySend(file, id)}
-                            >
-                                <RotateCw  size={15}/>
-                            </button>
-
-                            <DeleteFile
-                                style={remove_file_btn_style}
-                                onClick={() => onDelete(id)}
-                            />
+                            <div className={"tooltip-wrapper"}>
+                                <button    
+                                    style={retry_send_file_btn_style}
+                                    className="retry-send-file-btn" 
+                                    onClick={() => retrySend(file, id)}
+                                >
+                                    <RotateCw size={20}/>
+                                </button>
+                                <span className="tooltip-text tooltip-img-error">
+                                    Reintentar envío
+                                </span>
+                            </div>
                             <button 
                                 style={remove_file_btn_style} 
                                 className="cl-remove-imgs-btn" 
                                 onClick={() => onDelete(id)}
                             >
-                                <X size={12}/>
-                            </button>
+                                <X size={12} color="#FFFFFF"/>
+                            </button> 
                         </>
                     :
                      <svg

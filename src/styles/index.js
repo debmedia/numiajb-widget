@@ -41,6 +41,7 @@ export const styles = `
             font-feature-settings: normal;
     /* 5 */
     font-variation-settings: normal;
+    font-size:16px;
     /* 6 */
   }
 
@@ -53,6 +54,7 @@ export const styles = `
     margin: 0;
     /* 1 */
     line-height: inherit;
+    font-size: 16px;
     /* 2 */
   }
 
@@ -423,6 +425,7 @@ export const styles = `
     --base-white: #FFFFFF;
     --error: #F52C00;
     --error-background: #ffe7e1;
+    --metal-600: #454D71
   }
   
   .cl-trigger {
@@ -585,6 +588,16 @@ export const styles = `
     padding-bottom: 0.5rem;
     overscroll-behavior: contain; 
   }
+  .cl-message-timestamp {
+    margin: 0px;
+    font-size: 10px;
+    color: #a2a5a8;
+    margin-left: 10px;
+    display: flex;
+    align-items: flex-end;
+    height:auto;
+    white-space: nowrap;
+  }
   .cl-input_container {
     display: flex;
     width: 100%;
@@ -621,11 +634,14 @@ export const styles = `
   }
   .cl-remove-imgs-btn {
     border-radius: 50%;
-    background-color: var(--muted-grey);
+    background-color: var(--metal-600);
     position: absolute;
-    right: 4px;
-    top:  4px;
+    right: -4px;
+    top:  -2px;
     padding: 0.2rem
+  }
+  .cl-remove-imgs-btn > svg {
+    stroke: var(--base-white);
   }
   .cl-file-container {
     width: 100%;
@@ -703,9 +719,12 @@ export const styles = `
     text-align: center;
   }
   .error > .cl-remove-imgs-btn {
-    background-color: transparent;
-    top: 2px;
-    right: 2px;
+    background-color: var(--metal-600);
+    top: -2px;
+    right: -4px;
+  }
+  .error > .cl-remove-imgs-btn:hover {
+    background-color: gray
   }
   .retry-send-file-btn{
     margin-top: 0.2rem;
@@ -722,8 +741,9 @@ export const styles = `
     flex-direction: column;
     width: 100%;
     gap: 8px;
-    padding: 10px;
-    
+  }
+  .spinner {
+    animation: spin 2s linear infinite;
   }
   @-webkit-keyframes pulse {
     50% {
@@ -752,6 +772,10 @@ export const styles = `
     font-weight: 300;
     background-color: var(--base-white);
     color: rgb(17 24 39);
+    resize: none;
+    line-height: 1.25rem;
+    max-height: calc(1.5rem * 4);
+    min-height: 1rem;
   }
   .cl-input-element:focus {
     outline: 2px solid transparent;
@@ -960,6 +984,10 @@ export const styles = `
     white-space: nowrap;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
+  }
+  .tooltip-img-error {
+    bottom: -25px;
+    left: -20px;
   }
   .tooltip-text.error-visible {
     visibility: visible;
@@ -2197,4 +2225,12 @@ export const markdownBody = `
     margin-top: 0 !important;
   }
 
+  @keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start at 0 degrees rotation */
+  }
+  100% {
+    transform: rotate(360deg); /* End at 360 degrees rotation for a full spin */
+  }
+}
 `
