@@ -41,6 +41,7 @@ export const styles = `
             font-feature-settings: normal;
     /* 5 */
     font-variation-settings: normal;
+    font-size:16px;
     /* 6 */
   }
 
@@ -424,6 +425,7 @@ export const styles = `
     --base-white: #FFFFFF;
     --error: #F52C00;
     --error-background: #ffe7e1;
+    --metal-600: #454D71
   }
   
   .cl-trigger {
@@ -632,11 +634,14 @@ export const styles = `
   }
   .cl-remove-imgs-btn {
     border-radius: 50%;
-    background-color: var(--muted-grey);
+    background-color: var(--metal-600);
     position: absolute;
-    right: 4px;
-    top:  4px;
+    right: -4px;
+    top:  -2px;
     padding: 0.2rem
+  }
+  .cl-remove-imgs-btn > svg {
+    stroke: var(--base-white);
   }
   .cl-file-container {
     width: 100%;
@@ -714,9 +719,12 @@ export const styles = `
     text-align: center;
   }
   .error > .cl-remove-imgs-btn {
-    background-color: transparent;
-    top: 2px;
-    right: 2px;
+    background-color: var(--metal-600);
+    top: -2px;
+    right: -4px;
+  }
+  .error > .cl-remove-imgs-btn:hover {
+    background-color: gray
   }
   .retry-send-file-btn{
     margin-top: 0.2rem;
@@ -976,6 +984,10 @@ export const styles = `
     white-space: nowrap;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
+  }
+  .tooltip-img-error {
+    bottom: -25px;
+    left: -20px;
   }
   .tooltip-text.error-visible {
     visibility: visible;
