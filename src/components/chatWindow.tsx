@@ -184,7 +184,7 @@ export default function ChatWindow({
       }
       sendMessage(hostUrl, flowId, value, input_type, output_type, sessionId, output_component, tweaks, api_key, additional_headers, chatInputID, files)
         .then((res) => {
-          handleMessageResponse(res, output_component, addMessage);
+          handleMessageResponse(res, output_component, addMessage, updateLastMessage);
           if (res.data && res.data.session_id) {
             sessionId.current = res.data.session_id;
           }
@@ -194,8 +194,13 @@ export default function ChatWindow({
         })
         .catch((err) => {
           const response = err.response;
+          let connectionError = false;
+          if(err?.code == "ERR_NETWORK") {
+            connectionError = true;
+          }
+          
           updateLastMessage({
-            message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. (Error: ${response.status || ""})`,
+            message: connectionError ? "Error de conexión. Por favor, verifica tu conexión a Internet." : `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente. ${response?.status ? "(Error: " + response.status + ")" : ""}`,
             isSend: false,
             error: true,
           });

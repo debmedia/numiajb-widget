@@ -6,7 +6,7 @@ export function extractMessageFromOutput(output:{type:string, message:any}){
     return "Unknown message structure"
 }
 // Handles the response from sending a message to the chatbot
-export const handleMessageResponse = (res: any, output_component: string | undefined, addMessage: Function) => {
+export const handleMessageResponse = (res: any, output_component: string | undefined, addMessage: Function, updateLastMessage: Function) => {
     if (
       res.data &&
       res.data.outputs &&
@@ -48,5 +48,11 @@ export const handleMessageResponse = (res: any, output_component: string | undef
             });
           });
       }
+    } else {
+      updateLastMessage({
+        message: `Lo sentimos, no pudimos generar una respuesta en este momento. Por favor, intentá nuevamente.`,
+        isSend: false,
+        error: true,
+      });
     }
 };
